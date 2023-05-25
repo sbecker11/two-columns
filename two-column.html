@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Two Equal-Width Columns</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+
+      #container {
+        display: flex;
+        height: 100%;
+      }
+
+      #left-column {
+        flex: 1;
+        background-color: black;
+        overflow-y: scroll;
+      }
+
+      #right-column {
+        flex: 1;
+        background-color: darkgray;
+        overflow: hidden;
+      }
+
+      #report {
+        color: white;
+      }
+
+      .red-div {
+        width: 200px;
+        height: 200px;
+        margin: 20px;
+        background-color: red;
+      }
+    </style>
+    <script>
+      function report(message) {
+        document.getElementById("report").innerHTML = message;
+      }
+
+      function getCenter(element) {
+        var rect = element.getBoundingClientRect();
+        return rect.left + rect.width / 2;
+      }
+
+      function recenterRedDivs() {
+        var leftColumn = document.getElementById("left-column");
+        var leftColumnWidth = leftColumn.offsetWidth;
+        var canvas = document.getElementById("canvas");
+        var redDivs = document.getElementsByClassName("red-div");
+        canvas.width = leftColumnWidth;
+        var canvasRect = canvas.getBoundingClientRect();
+        var centerX = canvasRect.width / 2;
+        console.log("recenterDivs canvas.centerX:" + centerX);
+
+        for (var i = 0; i < redDivs.length; i++) {
+          var redDiv = redDivs[i];
+          var redDivRect = redDiv.getBoundingClientRect();
+          var redDivLeft = centerX - redDivRect.width / 2;
+          redDiv.style.left = redDivLeft + "px";
+          console.log("new redDiv[" + i + "].style.left:" + redDivLeft);
+        }
+      }
+
+      window.addEventListener("load", (event) => {
+        console.log("window.addEventListener load");
+
+        var firstRedDiv = document.getElementById("red-div-1");
+        var canvas = document.getElementById("canvas");
+        var leftColumn = document.getElementById("left-column");
+        var rightColumn = document.getElementById("right-column");
+        var reportElement = document.getElementById("report");
+
+        function reportPositions() {
+          console.log("reportPostions");
+
+          var canvasCenter = getCenter(canvas);
+          var leftColumnCenter = getCenter(leftColumn);
+          var rightColumnCenter = getCenter(rightColumn);
+          var firstRedDivCenter = getCenter(firstRedDiv);
+
+          reportElement.innerHTML =
+            "First Red Div Center: " + firstRedDivCenter + "px";
+            reportElement.innerHTML +=
+            "<br>Canvas Width: " + canvas.offsetWidth + "px";
+            reportElement.innerHTML +=
+            "<br>Left Column Width: " + leftColumn.offsetWidth + "px";
+          reportElement.innerHTML +=
+            "<br>Right Column Width: " + rightColumn.offsetWidth + "px";
+          reportElement.innerHTML +=
+            "<br>Window Width: " + window.innerWidth + "px";
+
+          recenterRedDivs();
+        }
+
+        reportPositions();
+        leftColumn.addEventListener("load", reportPositions);
+        leftColumn.addEventListener("resize", reportPositions);
+        window.addEventListener("resize", reportPositions);
+      });
+    </script>
+  </head>
+  <body>
+    <div id="container">
+      <div id="left-column">
+        <div class="red-div" id="red-div-1"></div>
+        <div class="red-div" id="red-div-2"></div>
+        <div class="red-div" id="red-div-3"></div>
+        <div class="red-div" id="red-div-4"></div>
+        <div class="red-div" id="red-div-5"></div>
+        <div class="red-div" id="red-div-6"></div>
+        <div class="red-div" id="red-div-7"></div>
+        <div class="red-div" id="red-div-8"></div>
+        <div class="red-div" id="red-div-9"></div>
+        <div class="red-div" id="red-div-10"></div>
+        <div class="red-div" id="red-div-11"></div>
+        <div class="red-div" id="red-div-12"></div>
+        <div class="red-div" id="red-div-13"></div>
+        <div class="red-div" id="red-div-14"></div>
+        <div class="red-div" id="red-div-15"></div>
+        <div class="red-div" id="red-div-16"></div>
+        <div class="red-div" id="red-div-17"></div>
+        <div class="red-div" id="red-div-18"></div>
+        <div class="red-div" id="red-div-19"></div>
+        <div class="red-div" id="red-div-20"></div>
+      </div>
+      <div id="right-column">
+        <canvas id="canvas" width="500" height="500"></canvas>
+        <p id="report"></p>
+      </div>
+    </div>
+    <script>
+      report("started");
+    </script>
+  </body>
+</html>
