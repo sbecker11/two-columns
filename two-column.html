@@ -1,117 +1,331 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Two-Column Layout</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      display: flex;
-      height: 10vh;
-      overflow: hidden;
-    }
-
-    .left-column {
-      flex: 1;
-      background: black;
-      overflow-y: scroll;
-    }
-
-    .right-column {
-      flex: 1;
-      background: gray;
-    }
-
-    .red-div {
-      border: 1px-solid-white;
-    }
-  </style>
-</head>
-<body>
-  <div class="left-column"></div>
-  <div class="right-column"></div>
-
-  <script>
-    window.addEventListener('DOMContentLoaded', function() {
-      create_new_red_objs();
-      add_new_red_divs_to_left_column();
-    });
-
-    window.addEventListener('resize', function() {
-      add_new_red_divs_to_left_column();
-    });
-
-    var red_objs;
-
-    function create_new_red_objs() {
-      red_objs = [];
-
-      for (var i = 0; i < 10; i++) {
-        z = getRandomValue(1, 8);
-        var red_obj = {
-          id: i,
-          width: 150,
-          height: 150,
-          x_center: getRandomValue(-10, 10),
-          y_center: i * (150 + 20) + getRandomValue(-50, 50),
-          z: z,
-          scale: (9 - z) / 8,
-          bright: 40 - (60 / 7) * (z - 8)
-        };
-
-        console.log(JSON.stringify(red_obj));
-        red_objs.push(red_obj);
+  <head>
+    <title>Equal-Width Columns</title>
+    <style>
+      body,
+      html {
+        height: 100%;
+        margin: 0;
+        padding: 0;
       }
-    }
 
-    function getRandomValue(min, max) {
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
+      #container {
+        display: flex;
+        height: 100%;
+      }
 
-    function update_left_column_center() {
-      var leftColumn = document.querySelector('.left-column');
-      var rect = leftColumn.getBoundingClientRect();
-      left_column_center_x = rect.left + rect.width / 2;
-    }
+      #left-column {
+        flex: 1;
+        background-color: black;
+        overflow-y: scroll;
+        position: relative;
+      }
 
-    function log_red_div(red_div) {
-      var str = 'red_div:';
-      str += "id:" + red_div.id + "|";
-      str += "class:" + red_div.className + "|";
-      str += "left:" + red_div.style.left + "|";
-      str += "top:" + red_div.style.top + "|";
-      str += "width:" + red_div.style.width + "|";
-      str += "height:" + red_div.style.height + "|";
-      str += "zIndex:" + red_div.style.zIndex + "|";
-      str += "filter:" + red_div.style.filter + "|";
-      console.log(str);
-    }
-    function add_new_red_divs_to_left_column() {
-      var leftColumn = document.querySelector('.left-column');
-      leftColumn.innerHTML = '';
-      update_left_column_center();
+      #right-column {
+        flex: 1;
+        background-color: darkgrey;
+        position: relative;
+      }
 
-      red_objs.forEach(function(red_obj) {
-        var red_div = document.createElement('div');
-        red_div.id = red_obj.id;
-        red_div.className = "red-div";
-        red_div.style.position = 'absolute';
-        red_div.style.left = red_obj.x_center + left_column_center_x + 'px';
-        red_div.style.top = red_obj.y_center + red_obj.height / 2 + 'px';
-        red_div.style.width = red_obj.width * red_obj.scale + 'px';
-        red_div.style.height = red_obj.height * red_obj.scale + 'px';
-        red_div.style.zIndex = -1 * red_obj.z;
-        red_div.style.filter = 'brightness(' + red_obj.bright + ')';
+      #report {
+        color: white;
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        white-space: pre-line;
+        font-family: monospace;
+      }
 
-        log_red_div(red_div);
+      #canvas {
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
 
-        leftColumn.appendChild(red_div);
-      });
-    }
-  </script>
-</body>
+      .red-div {
+        width: 150px;
+        height: 150px;
+        margin: 20px auto;
+        background-color: red;
+      }
+
+      #center-div {
+        width: 50px;
+        height: 50px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border: 1px solid white;
+        z-index: 10;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <div id="left-column">
+        <div id="canvas">
+          <!-- 10 red divs will be dynamically added here -->
+        </div>
+        <div id="center-div"></div>
+      </div>
+      <div id="right-column">
+        <canvas id="canvas"></canvas>
+        <pre id="report"></pre>
+      </div>
+    </div>
+
+    <script>
+      // Function to update the report element
+      function report(message) {
+        document.getElementById("report").innerHTML = message;
+      }
+
+      // Call report("started") before the left column is initialized
+      report("started");
+
+      // Function to generate the report message
+      function generateReportMessage() {
+        var redDivHzCtr = getFirstRedDivHzCtr();
+        var canvasHzCtr = getCanvasHzCtr();
+        var leftColumnHzCtr = getLeftColumnHzCtr();
+        var windowHzCtr = getWindowHzCtr();
+        var centerDivHzCtr = getCenterDivHzCtr();
+        var centerDivVtCtr = getCenterDivVtCtr();
+        var leftColumnScrollTop = getLeftColumnScrollTop();
+        var leftColumnOffsetHeight = getLeftColumnOffsetHeight();
+        var canvasScrollTop = getCanvasScrollTop();
+        var canvasOffsetHeight = getCanvasOffsetHeight();
+
+        var reportMessage =
+          "Window event type: " +
+          window.event.type +
+          "\n" +
+          "Red-Div Horizontal Center: " +
+          redDivHzCtr +
+          "\n" +
+          "Canvas Horizontal Center: " +
+          canvasHzCtr +
+          "\n" +
+          "Left Column Horizontal Center: " +
+          leftColumnHzCtr +
+          "\n" +
+          "Window Horizontal Center: " +
+          windowHzCtr +
+          "\n" +
+          "Center-Div Horizontal Center: " +
+          centerDivHzCtr +
+          "\n" +
+          "Center-Div Vertical Center: " +
+          centerDivVtCtr +
+          "\n" +
+          "Left Column ScrollTop: " +
+          leftColumnScrollTop +
+          "\n" +
+          "Left Column OffsetHeight: " +
+          leftColumnOffsetHeight +
+          "\n" +
+          "Canvas ScrollTop: " +
+          canvasScrollTop +
+          "\n" +
+          "Canvas OffsetHeight: " +
+          canvasOffsetHeight;
+
+        return reportMessage;
+      }
+
+      // Function to update the report element
+      function updateReport() {
+        var reportMessage = generateReportMessage();
+        report(reportMessage);
+      }
+
+      // Function to handle window resize event
+      function handleResize() {
+        var windowWidth = window.innerWidth;
+        var leftColumnWidth = windowWidth / 2;
+
+        document.getElementById("left-column").style.width =
+          leftColumnWidth + "px";
+        document.getElementById("canvas").style.width = leftColumnWidth + "px";
+
+        updateRedDivs();
+        centerDiv();
+        updateReport();
+      }
+
+      // Function to handle window load event
+      function handleLoad() {
+        updateRedDivs();
+        centerDiv();
+        updateReport();
+      }
+
+      // Function to handle left-column scroll event
+      function handleLeftColumnScroll() {
+        centerDiv();
+        updateReport();
+      }
+
+      // Function to handle mousemove event on the canvas
+      function handleCanvasMouseMove(event) {
+        var canvas = document.getElementById("canvas");
+        var canvasRect = canvas.getBoundingClientRect();
+        var mouseX = event.clientX - canvasRect.left;
+        var mouseY = event.clientY - canvasRect.top;
+
+        var centerDiv = document.getElementById("center-div");
+        var centerDivRect = centerDiv.getBoundingClientRect();
+        var centerDivX = centerDivRect.left - canvasRect.left + (centerDivRect.width / 2);
+        var centerDivY = centerDivRect.top - canvasRect.top + (centerDivRect.height / 2);
+
+        var centerDivMouseX = mouseX - centerDivX;
+        var centerDivMouseY = mouseY - centerDivY;
+
+        var reportMessage = "Mouse Coordinates (Canvas-relative): X = " + mouseX + ", Y = " + mouseY + "<br/>" +
+          "Center-Div Coordinates (Canvas-relative): X = " + centerDivX + ", Y = " + centerDivY + "<br/>" +
+          "Mouse Coordinates (Center-Div-relative): X = " + centerDivMouseX + ", Y = " + centerDivMouseY;
+
+        report(reportMessage);
+      }
+      
+      // Function to update the horizontal center (hz-ctr) of red-divs
+      function updateRedDivs() {
+        var canvas = document.getElementById("canvas");
+        var redDivs = canvas.getElementsByClassName("red-div");
+        var canvasHzCtr = canvas.offsetWidth / 2;
+
+        for (var i = 0; i < redDivs.length; i++) {
+          var redDiv = redDivs[i];
+          var redDivHzCtr = redDiv.offsetWidth / 2;
+          redDiv.style.left = canvasHzCtr - redDivHzCtr + "px";
+        }
+      }
+
+      // Function to get the horizontal center (hz-ctr) of the first red-div
+      function getFirstRedDivHzCtr() {
+        var redDiv = document.querySelector(".red-div");
+        var redDivHzCtr = redDiv.offsetWidth / 2;
+        return redDivHzCtr;
+      }
+
+      // Function to get the horizontal center (hz-ctr) of the canvas
+      function getCanvasHzCtr() {
+        var canvas = document.getElementById("canvas");
+        var canvasHzCtr = canvas.offsetWidth / 2;
+        return canvasHzCtr;
+      }
+
+      // Function to get the horizontal center (hz-ctr) of the left column
+      function getLeftColumnHzCtr() {
+        var leftColumn = document.getElementById("left-column");
+        var leftColumnHzCtr = leftColumn.offsetWidth / 2;
+        return leftColumnHzCtr;
+      }
+
+      // Function to get the horizontal center (hz-ctr) of the window
+      function getWindowHzCtr() {
+        var windowHzCtr = window.innerWidth / 2;
+        return windowHzCtr;
+      }
+
+      // Function to return the center-div's horizontal and vertical 
+      // center (hz-ctr,vt-ctr) as a string
+      function getCenterDivCtrStr() {
+        var centerDiv = document.getElementById("center-div");
+        var canvas = document.getElementById("canvas");
+        var leftColumn = document.getElementById("left-column");
+
+        var centerDivHzCtr =
+          centerDiv.offsetLeft - canvas.offsetLeft + centerDiv.offsetWidth / 2;
+        var centerDivVtCtr =
+          leftColumn.offsetHeight / 2 +
+          (canvas.offsetTop - leftColumn.scrollTop) +
+          centerDiv.offsetHeight / 2;
+
+        return "centerDivHzCtr:" + centerDivHzCtr + " centerDivVtCtr:" + centerDivVtCtr;
+      }
+
+      // Function to get the horizontal center (hz-ctr) of the center div
+      function getCenterDivHzCtr() {
+        var centerDiv = document.getElementById("center-div");
+        var canvas = document.getElementById("canvas");
+        var centerDivHzCtr =
+          centerDiv.offsetLeft - canvas.offsetLeft + centerDiv.offsetWidth / 2;
+        return centerDivHzCtr;
+      }
+
+      // Function to get the vertical center (vt-ctr) of the center div
+      function getCenterDivVtCtr() {
+        var centerDiv = document.getElementById("center-div");
+        var leftColumn = document.getElementById("left-column");
+        var canvas = document.getElementById("canvas");
+        var centerDivVtCtr =
+          leftColumn.offsetHeight / 2 +
+          (canvas.offsetTop - leftColumn.scrollTop) +
+          centerDiv.offsetHeight / 2;
+        return centerDivVtCtr;
+      }
+
+      // Function to get the scrollTop of the left column
+      function getLeftColumnScrollTop() {
+        var leftColumn = document.getElementById("left-column");
+        var scrollTop = leftColumn.scrollTop;
+        return scrollTop;
+      }
+
+      // Function to get the offsetHeight of the left column
+      function getLeftColumnOffsetHeight() {
+        var leftColumn = document.getElementById("left-column");
+        var offsetHeight = leftColumn.offsetHeight;
+        return offsetHeight;
+      }
+
+      // Function to get the scrollTop of the canvas
+      function getCanvasScrollTop() {
+        var canvas = document.getElementById("canvas");
+        var scrollTop = canvas.scrollTop;
+        return scrollTop;
+      }
+
+      // Function to get the offsetHeight of the canvas
+      function getCanvasOffsetHeight() {
+        var canvas = document.getElementById("canvas");
+        var offsetHeight = canvas.offsetHeight;
+        return offsetHeight;
+      }
+
+      // Function to center the div in the left column
+      function centerDiv() {
+        var leftColumn = document.getElementById("left-column");
+        var canvas = document.getElementById("canvas");
+        var centerDiv = document.getElementById("center-div");
+
+        var scrollTop = leftColumn.scrollTop;
+        var top =
+          (leftColumn.offsetHeight - centerDiv.offsetHeight) / 2 + scrollTop;
+
+        centerDiv.style.top = top + "px";
+      }
+
+      // Attach event listeners
+      window.addEventListener("resize", handleResize);
+      window.addEventListener("load", handleLoad);
+      document
+        .getElementById("left-column")
+        .addEventListener("scroll", handleLeftColumnScroll);
+
+      // Attach mousemove event listener to the canvas
+      var canvas = document.getElementById("canvas");
+      canvas.addEventListener("mousemove", handleCanvasMouseMove);
+
+      // Generate 10 red divs
+      for (var i = 0; i < 10; i++) {
+        var redDiv = document.createElement("div");
+        redDiv.className = "red-div";
+        canvas.appendChild(redDiv);
+      }
+    </script>
+  </body>
 </html>
