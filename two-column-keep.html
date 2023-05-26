@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Two-Column Layout</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    #container {
+      display: flex;
+      height: 100%;
+    }
+
+    #left-column {
+      flex: 1;
+      background: black;
+      color: white;
+      overflow-y: scroll;
+      position: relative;
+    }
+
+    #right-column {
+      flex: 1;
+      background: gray;
+    }
+
+    .red-div {
+      margin: 5px;
+      background: red;
+      color: white;
+    }
+
+    #centered-div {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border: 1px solid white;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="left-column" onscroll="repositionWhiteDiv()">
+      <div id="centered-div"></div>
+    </div>
+    <div id="right-column"></div>
+  </div>
+
+  <script>
+    function createDivs() {
+      var leftColumn = document.getElementById('left-column');
+      
+      for (var i = 0; i < 100; i++) {
+        var div = document.createElement('div');
+        div.className = 'red-div';
+        div.style.width = Math.floor(Math.random() * (100 - 50 + 1) + 50) + 'px';
+        div.style.height = Math.floor(Math.random() * (100 - 50 + 1) + 50) + 'px';
+        div.style.margin = Math.floor(Math.random() * (10 - (-10) + 1) - 10) + 'px';
+        div.style.transform = 'translateX(' + Math.floor(Math.random() * (100 - (-100) + 1) - 100) + 'px)';
+        leftColumn.appendChild(div);
+      }
+    }
+
+    function centerDivs() {
+      var leftColumn = document.getElementById('left-column');
+      var divs = leftColumn.getElementsByClassName('red-div');
+
+      for (var i = 0; i < divs.length; i++) {
+        var div = divs[i];
+        div.style.marginLeft = (leftColumn.offsetWidth - div.offsetWidth) / 2 + 'px';
+      }
+      
+      var centeredDiv = document.getElementById('centered-div');
+      centeredDiv.style.left = (leftColumn.offsetWidth - centeredDiv.offsetWidth) / 2 + 'px';
+      centeredDiv.style.top = (leftColumn.offsetHeight - centeredDiv.offsetHeight) / 2 + 'px';
+    }
+
+    function repositionWhiteDiv() {
+      var centeredDiv = document.getElementById('centered-div');
+      var leftColumn = document.getElementById('left-column');
+      centeredDiv.style.top = (leftColumn.scrollTop + (leftColumn.offsetHeight - centeredDiv.offsetHeight) / 2) + 'px';
+    }
+
+    window.addEventListener('resize', centerDivs);
+    window.addEventListener('load', function() {
+      createDivs();
+      centerDivs();
+    });
+  </script>
+</body>
+</html>

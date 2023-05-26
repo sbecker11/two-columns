@@ -1,141 +1,117 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Two Equal-Width Columns</title>
-    <style>
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
+<head>
+  <title>Two-Column Layout</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      display: flex;
+      height: 10vh;
+      overflow: hidden;
+    }
+
+    .left-column {
+      flex: 1;
+      background: black;
+      overflow-y: scroll;
+    }
+
+    .right-column {
+      flex: 1;
+      background: gray;
+    }
+
+    .red-div {
+      border: 1px-solid-white;
+    }
+  </style>
+</head>
+<body>
+  <div class="left-column"></div>
+  <div class="right-column"></div>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      create_new_red_objs();
+      add_new_red_divs_to_left_column();
+    });
+
+    window.addEventListener('resize', function() {
+      add_new_red_divs_to_left_column();
+    });
+
+    var red_objs;
+
+    function create_new_red_objs() {
+      red_objs = [];
+
+      for (var i = 0; i < 10; i++) {
+        z = getRandomValue(1, 8);
+        var red_obj = {
+          id: i,
+          width: 150,
+          height: 150,
+          x_center: getRandomValue(-10, 10),
+          y_center: i * (150 + 20) + getRandomValue(-50, 50),
+          z: z,
+          scale: (9 - z) / 8,
+          bright: 40 - (60 / 7) * (z - 8)
+        };
+
+        console.log(JSON.stringify(red_obj));
+        red_objs.push(red_obj);
       }
+    }
 
-      #container {
-        display: flex;
-        height: 100%;
-      }
+    function getRandomValue(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
 
-      #left-column {
-        flex: 1;
-        background-color: black;
-        overflow-y: scroll;
-      }
+    function update_left_column_center() {
+      var leftColumn = document.querySelector('.left-column');
+      var rect = leftColumn.getBoundingClientRect();
+      left_column_center_x = rect.left + rect.width / 2;
+    }
 
-      #right-column {
-        flex: 1;
-        background-color: darkgray;
-        overflow: hidden;
-      }
+    function log_red_div(red_div) {
+      var str = 'red_div:';
+      str += "id:" + red_div.id + "|";
+      str += "class:" + red_div.className + "|";
+      str += "left:" + red_div.style.left + "|";
+      str += "top:" + red_div.style.top + "|";
+      str += "width:" + red_div.style.width + "|";
+      str += "height:" + red_div.style.height + "|";
+      str += "zIndex:" + red_div.style.zIndex + "|";
+      str += "filter:" + red_div.style.filter + "|";
+      console.log(str);
+    }
+    function add_new_red_divs_to_left_column() {
+      var leftColumn = document.querySelector('.left-column');
+      leftColumn.innerHTML = '';
+      update_left_column_center();
 
-      #report {
-        color: white;
-      }
+      red_objs.forEach(function(red_obj) {
+        var red_div = document.createElement('div');
+        red_div.id = red_obj.id;
+        red_div.className = "red-div";
+        red_div.style.position = 'absolute';
+        red_div.style.left = red_obj.x_center + left_column_center_x + 'px';
+        red_div.style.top = red_obj.y_center + red_obj.height / 2 + 'px';
+        red_div.style.width = red_obj.width * red_obj.scale + 'px';
+        red_div.style.height = red_obj.height * red_obj.scale + 'px';
+        red_div.style.zIndex = -1 * red_obj.z;
+        red_div.style.filter = 'brightness(' + red_obj.bright + ')';
 
-      .red-div {
-        width: 200px;
-        height: 200px;
-        margin: 20px;
-        background-color: red;
-      }
-    </style>
-    <script>
-      function report(message) {
-        document.getElementById("report").innerHTML = message;
-      }
+        log_red_div(red_div);
 
-      function getCenter(element) {
-        var rect = element.getBoundingClientRect();
-        return rect.left + rect.width / 2;
-      }
-
-      function recenterRedDivs() {
-        var leftColumn = document.getElementById("left-column");
-        var leftColumnWidth = leftColumn.offsetWidth;
-        var canvas = document.getElementById("canvas");
-        var redDivs = document.getElementsByClassName("red-div");
-        canvas.width = leftColumnWidth;
-        var canvasRect = canvas.getBoundingClientRect();
-        var centerX = canvasRect.width / 2;
-        console.log("recenterDivs canvas.centerX:" + centerX);
-
-        for (var i = 0; i < redDivs.length; i++) {
-          var redDiv = redDivs[i];
-          var redDivRect = redDiv.getBoundingClientRect();
-          var redDivLeft = centerX - redDivRect.width / 2;
-          redDiv.style.left = redDivLeft + "px";
-          console.log("new redDiv[" + i + "].style.left:" + redDivLeft);
-        }
-      }
-
-      window.addEventListener("load", (event) => {
-        console.log("window.addEventListener load");
-
-        var firstRedDiv = document.getElementById("red-div-1");
-        var canvas = document.getElementById("canvas");
-        var leftColumn = document.getElementById("left-column");
-        var rightColumn = document.getElementById("right-column");
-        var reportElement = document.getElementById("report");
-
-        function reportPositions() {
-          console.log("reportPostions");
-
-          var canvasCenter = getCenter(canvas);
-          var leftColumnCenter = getCenter(leftColumn);
-          var rightColumnCenter = getCenter(rightColumn);
-          var firstRedDivCenter = getCenter(firstRedDiv);
-
-          reportElement.innerHTML =
-            "First Red Div Center: " + firstRedDivCenter + "px";
-            reportElement.innerHTML +=
-            "<br>Canvas Width: " + canvas.offsetWidth + "px";
-            reportElement.innerHTML +=
-            "<br>Left Column Width: " + leftColumn.offsetWidth + "px";
-          reportElement.innerHTML +=
-            "<br>Right Column Width: " + rightColumn.offsetWidth + "px";
-          reportElement.innerHTML +=
-            "<br>Window Width: " + window.innerWidth + "px";
-
-          recenterRedDivs();
-        }
-
-        reportPositions();
-        leftColumn.addEventListener("load", reportPositions);
-        leftColumn.addEventListener("resize", reportPositions);
-        window.addEventListener("resize", reportPositions);
+        leftColumn.appendChild(red_div);
       });
-    </script>
-  </head>
-  <body>
-    <div id="container">
-      <div id="left-column">
-        <div class="red-div" id="red-div-1"></div>
-        <div class="red-div" id="red-div-2"></div>
-        <div class="red-div" id="red-div-3"></div>
-        <div class="red-div" id="red-div-4"></div>
-        <div class="red-div" id="red-div-5"></div>
-        <div class="red-div" id="red-div-6"></div>
-        <div class="red-div" id="red-div-7"></div>
-        <div class="red-div" id="red-div-8"></div>
-        <div class="red-div" id="red-div-9"></div>
-        <div class="red-div" id="red-div-10"></div>
-        <div class="red-div" id="red-div-11"></div>
-        <div class="red-div" id="red-div-12"></div>
-        <div class="red-div" id="red-div-13"></div>
-        <div class="red-div" id="red-div-14"></div>
-        <div class="red-div" id="red-div-15"></div>
-        <div class="red-div" id="red-div-16"></div>
-        <div class="red-div" id="red-div-17"></div>
-        <div class="red-div" id="red-div-18"></div>
-        <div class="red-div" id="red-div-19"></div>
-        <div class="red-div" id="red-div-20"></div>
-      </div>
-      <div id="right-column">
-        <canvas id="canvas" width="500" height="500"></canvas>
-        <p id="report"></p>
-      </div>
-    </div>
-    <script>
-      report("started");
-    </script>
-  </body>
+    }
+  </script>
+</body>
 </html>
