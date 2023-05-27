@@ -94,6 +94,7 @@
       function createRedDiv() {
         var redDiv = document.createElement("div");
         redDiv.className = "red-div";
+        //redDiv.style.position = "absolute";
 
         document.getElementById("canvas").appendChild(redDiv);
         var redDivRect = redDiv.getBoundingClientRect();
@@ -109,7 +110,7 @@
         redDiv.setAttribute("data-orig-offset-top", Number(redDiv.offsetTop));
         return redDiv;
       }
-      
+
       // Function to update the report element
       function updateReport() {
         var reportMessage = generateReportMessage();
@@ -129,17 +130,39 @@
         var canvasScrollTop = getCanvasScrollTop();
         var canvasOffsetHeight = getCanvasOffsetHeight();
 
-        var reportMessage = "Window event type: " + window.event.type + "\n" +
-        "Red-Div Horizontal Center: " + redDivHzCtr + "\n" +
-        "Canvas Horizontal Center: " + canvasHzCtr + "\n" +
-        "Left Column Horizontal Center: " + leftColumnHzCtr + "\n" +
-        "Window Horizontal Center: " + windowHzCtr + "\n" +
-        "Center-Div Horizontal Center: " + centerDivHzCtr + "\n" +
-        "Center-Div Vertical Center: " + centerDivVtCtr + "\n" +
-        "Left Column ScrollTop: " + leftColumnScrollTop + "\n" +
-        "Left Column OffsetHeight: " + leftColumnOffsetHeight + "\n" +
-        "Canvas ScrollTop: " + canvasScrollTop + "\n" +
-        "Canvas OffsetHeight: " + canvasOffsetHeight;
+        var reportMessage =
+          "Window event type: " +
+          window.event.type +
+          "\n" +
+          "Red-Div Horizontal Center: " +
+          redDivHzCtr +
+          "\n" +
+          "Canvas Horizontal Center: " +
+          canvasHzCtr +
+          "\n" +
+          "Left Column Horizontal Center: " +
+          leftColumnHzCtr +
+          "\n" +
+          "Window Horizontal Center: " +
+          windowHzCtr +
+          "\n" +
+          "Center-Div Horizontal Center: " +
+          centerDivHzCtr +
+          "\n" +
+          "Center-Div Vertical Center: " +
+          centerDivVtCtr +
+          "\n" +
+          "Left Column ScrollTop: " +
+          leftColumnScrollTop +
+          "\n" +
+          "Left Column OffsetHeight: " +
+          leftColumnOffsetHeight +
+          "\n" +
+          "Canvas ScrollTop: " +
+          canvasScrollTop +
+          "\n" +
+          "Canvas OffsetHeight: " +
+          canvasOffsetHeight;
 
         return reportMessage;
       }
@@ -149,7 +172,8 @@
         var windowWidth = window.innerWidth;
         var leftColumnWidth = windowWidth / 2;
 
-        document.getElementById("left-column").style.width = leftColumnWidth + "px";
+        document.getElementById("left-column").style.width =
+          leftColumnWidth + "px";
         document.getElementById("canvas").style.width = leftColumnWidth + "px";
 
         updateRedDivs();
@@ -217,7 +241,8 @@
       function getCenterDivHzCtr() {
         var centerDiv = document.getElementById("center-div");
         var canvas = document.getElementById("canvas");
-        var centerDivHzCtr = centerDiv.offsetLeft - canvas.offsetLeft + centerDiv.offsetWidth / 2;
+        var centerDivHzCtr =
+          centerDiv.offsetLeft - canvas.offsetLeft + centerDiv.offsetWidth / 2;
         return centerDivHzCtr;
       }
 
@@ -228,7 +253,7 @@
         var canvas = document.getElementById("canvas");
         var centerDivVtCtr =
           leftColumn.offsetHeight / 2 +
-          canvas.offsetTop - leftColumn.scrollTop +
+          (canvas.offsetTop - leftColumn.scrollTop) +
           centerDiv.offsetHeight / 2;
         return centerDivVtCtr;
       }
@@ -278,19 +303,20 @@
         var redDivs = canvas.getElementsByClassName("red-div");
         for (var i = 0; i < redDivs.length; i++) {
           var redDiv = redDivs[i];
-          var orig_offset_top_str = redDiv.attributes.getNamedItem('data-orig-offset-top').value;
-          var orig_offset_left_str = redDiv.attributes.getNamedItem('data-orig-offset-left').value;
+          var origTop = parseInt(redDiv.attributes.getNamedItem('data-orig-offset-top').value);
+          var origLeft = parseInt(redDiv.attributes.getNamedItem('data-orig-offset-left').value);
 
-          var origTop = parseInt(orig_offset_top_str);
-          var origLeft = parseInt(orig_offset_left_str);
+          // apply the motion parallax 
           var newTop = origTop + parallax_dv + "px";
           var newLeft = origLeft + parallax_dh + "px";
-          redDiv.style.top = newTop;
-          redDiv.style.left = newLeft;
-          console.log("redDiv["+i+"] style.left:" + redDiv.style.left + " style.top:" + redDiv.style.top);
+          console.log("redDiv["+i+"] newLeft:" + newLeft + " newTop:" + newTop);
+
+          //redDiv.style.top = newTop;
+          //redDiv.style.left = newLeft;
+          //console.log("redDiv["+i+"] style.left:" + redDiv.style.left + " style.top:" + redDiv.style.top);
         }
       }
-
+  
       // Function to handle mousemove event on the canvas
       function handleCanvasMouseMove(event) {
         var canvas = document.getElementById("canvas");
@@ -317,8 +343,8 @@
       document
         .getElementById("left-column")
         .addEventListener("scroll", handleLeftColumnScroll);
-      
-        var canvas = document.getElementById("canvas");
+
+      var canvas = document.getElementById("canvas");
       canvas.addEventListener("mousemove", handleCanvasMouseMove);
 
       // Generate 10 red divs with additional properties
