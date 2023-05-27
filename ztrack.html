@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    #canvas {
+      width: 100%;
+      height: 100%;
+      overflow-y: scroll;
+      position: relative;
+    }
+
+    #canvas-content {
+      position: absolute;
+      width: 100%;
+      height: 2000px; /* Adjust the height as needed */
+    }
+
+    #box {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100px;
+      height: 100px;
+      background-color: red;
+      transform: translate(-50%, -50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-family: sans-serif;
+    }
+
+    #text {
+      text-align: center;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas">
+    <div id="canvas-content">
+      <div id="box">
+        <span id="text"></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      var box = document.getElementById("box");
+      var text = document.getElementById("text");
+      var canvas = document.getElementById("canvas");
+
+      // Function to update the position of the box and text
+      function updateBoxPosition(event) {
+        var x = event.clientX + canvas.scrollLeft;
+        var y = event.clientY + canvas.scrollTop;
+
+        box.style.left = x + "px";
+        box.style.top = y + "px";
+
+        var canvasRect = canvas.getBoundingClientRect();
+        var centerX = x - canvasRect.left;
+        var centerY = y - canvasRect.top;
+
+        text.textContent = "Center: " + centerX + ", " + centerY;
+      }
+
+      // Simulate a click on the current position of the red div
+      var boxRect = box.getBoundingClientRect();
+      var simulatedEvent = new MouseEvent('click', {
+        clientX: boxRect.left + boxRect.width / 2 - window.scrollX,
+        clientY: boxRect.top + boxRect.height / 2 - window.scrollY
+      });
+      updateBoxPosition(simulatedEvent);
+
+      // Scroll the canvas to center the red div in the viewport
+      var viewportCenterX = window.innerWidth / 2;
+      var viewportCenterY = window.innerHeight / 2;
+      var canvasRect = canvas.getBoundingClientRect();
+      var scrollX = boxRect.left + boxRect.width / 2 - (canvasRect.left + viewportCenterX) + canvas.scrollLeft;
+      var scrollY = boxRect.top + boxRect.height / 2 - (canvasRect.top + viewportCenterY) + canvas.scrollTop;
+      canvas.scrollTo(scrollX, scrollY);
+
+      // Attach the click event listener after the initial positioning and scrolling
+      canvas.addEventListener("click", updateBoxPosition);
+    };
+  </script>
+</body>
+</html>
