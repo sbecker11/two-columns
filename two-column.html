@@ -178,7 +178,7 @@
 
         filtersStrs = `${brightnessStr} ${blurStr}`;
         redDiv.style.filter = filtersStrs;
-        
+
         return redDiv;
       }
 
@@ -190,7 +190,6 @@
 
       // Function to generate the report message
       function generateReportMessage() {
-        var redDivHzCtr = getFirstRedDivHzCtr();
         var canvasHzCtr = getCanvasHzCtr();
         var leftColumnHzCtr = getLeftColumnHzCtr();
         var windowHzCtr = getWindowHzCtr();
@@ -202,9 +201,6 @@
         var reportMessage =
           "Window event type: " +
           window.event.type +
-          "\n" +
-          "Red-Div Horizontal Center: " +
-          redDivHzCtr +
           "\n" +
           "Canvas Horizontal Center: " +
           canvasHzCtr +
@@ -252,17 +248,6 @@
       // Function to handle left-column scroll event
       function handleLeftColumnScroll() {
         updateReport();
-      }
-
-      // Function to get the canvas-relative horizontal center (hz-ctr) of the first red div
-      function getFirstRedDivHzCtr() {
-        var redDiv = document.querySelector(".red-div");
-        var canvas = document.getElementById("canvas");
-        var redDivRect = redDiv.getBoundingClientRect();
-        var canvasRect = canvas.getBoundingClientRect();
-        var redDivHzCtr =
-          redDivRect.left - canvasRect.left + redDivRect.width / 2;
-        return redDivHzCtr;
       }
 
       // Function to get the horizontal center (hz-ctr) of the canvas
@@ -319,7 +304,7 @@
         var dh = parallax_dh * PARALLAX_EXAGGERATION_FACTOR;
         var dv = parallax_dv * PARALLAX_EXAGGERATION_FACTOR;
         var average_div_size_offset = (DIV_SIZE_MIN+DIV_SIZE_MAX)/2;
-        console.log(`parallax: dh:${parallax_dh} dv:${parallax_dv}`);
+        // console.log(`parallax: dh:${parallax_dh} dv:${parallax_dv}`);
         var canvas_dx = getCanvasHzCtr() - average_div_size_offset/2;
         var canvas_dy = 0;
         zTranslateInfoStrs = [];
@@ -345,33 +330,48 @@
       }
 
       // Function to handle mousemove event on the window
-      function handleWindowMouseMove(event) {
+      //function handleWindowMouseMove(event) {
+//
+      //  var window = document.getElementById("container");
+      //  var windowRect = window.getBoundingClientRect();
+      //  var mouseX = event.clientX - windowRect.left;
+      //  var mouseY = event.clientY - windowRect.top;
+//
+      //  centerDivX = windowRect.width / 2;
+      //  centerDivY = windowRect.height / 2;
+//
+      //  var parallax_dh = mouseX - centerDivX;
+      //  var parallax_dv = mouseY - centerDivY;
+//
+      //  applyMotionParallax(parallax_dh, parallax_dv);
+      //}
+      
+      // Function to handle mousemove event on the window
+      function handleLeftColumnMouseMove(event) {
 
-        var window = document.getElementById("container");
-        var windowRect = window.getBoundingClientRect();
-        var mouseX = event.clientX - windowRect.left;
-        var mouseY = event.clientY - windowRect.top;
+        var leftColumn = document.getElementById("left-column");
+        var leftColumnRect = leftColumn.getBoundingClientRect();
+        var mouseX = event.clientX - leftColumnRect.left;
+        var mouseY = event.clientY - leftColumnRect.top;
 
-        centerDivX = windowRect.width / 2;
-        centerDivY = windowRect.height / 2;
+        centerDivX = leftColumnRect.width / 2;
+        centerDivY = leftColumnRect.height / 2;
 
         var parallax_dh = mouseX - centerDivX;
         var parallax_dv = mouseY - centerDivY;
 
         applyMotionParallax(parallax_dh, parallax_dv);
       }
-
+      
       // Attach event listeners
       window.addEventListener("resize", handleResize);
       window.addEventListener("load", handleLoad);
-      window.addEventListener("mousemove", handleWindowMouseMove)
-      document
-        .getElementById("left-column")
-        .addEventListener("scroll", handleLeftColumnScroll);
+      leftColumn = document.getElementById("left-column");
+      leftColumn.addEventListener("scroll", handleLeftColumnScroll);
+      leftColumn.addEventListener("mousemove", handleLeftColumnMouseMove);
 
+      // Generate NUM_DIVS red divs with additional properties
       var canvas = document.getElementById("canvas");
-
-      // Generate 10 red divs with additional properties
       for (var i = 0; i < NUM_DIVS; i++) {
         var redDiv = createRedDiv();
         canvas.appendChild(redDiv);
