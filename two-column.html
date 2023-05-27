@@ -91,7 +91,10 @@
       }
 
       function toFixedPoint(value, point) {
-        return value.toFixed(point);
+        if (value) {
+          return value.toFixed(point);
+        }
+        return value;
       }
 
       /**
@@ -347,10 +350,9 @@
         // first cache zTranslateInfoStrs for all possible values of randZ
         var dh = parallax_dh * PARALLAX_EXAGGERATION_FACTOR;
         var dv = parallax_dv * PARALLAX_EXAGGERATION_FACTOR;
-
+        var average_div_size_offset = (DIV_SIZE_MIN+DIV_SIZE_MAX)/2;
         console.log(`parallax: dh:${parallax_dh} dv:${parallax_dv}`);
-
-        var canvas_dx = getCanvasHzCtr();
+        var canvas_dx = getCanvasHzCtr() - average_div_size_offset/2;
         var canvas_dy = 0;
         zTranslateInfoStrs = [];
         for (var randZ = RANDZ_MIN; randZ <= RANDZ_MAX; randZ++) {
