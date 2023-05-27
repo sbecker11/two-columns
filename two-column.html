@@ -71,8 +71,7 @@
       let DIV_SIZE_MIN = 150;
       let DIV_SIZE_MAX = 150;
       let DIV_MARGIN_MAX = 20;
-      let DIV_X_OFFSET_MAX = 50;
-      let DIV_Y_OFFSET_MAX = 50;
+      let DIV_X_OFFSET_MAX = 200;
       let DIV_VT_MARGIN = 20;
       let PARALLAX_EXAGGERATION_FACTOR = 1.0;
       let RANDZ_MIN = 1;
@@ -162,6 +161,9 @@
 
         var randZ = getRandomInt(RANDZ_MIN, RANDZ_MAX);
         redDiv.setAttribute("data-rand-z", randZ);
+        var randOffsetX = getRandom(-DIV_X_OFFSET_MAX,DIV_X_OFFSET_MAX);
+        redDiv.setAttribute("data-rand-offset-x", randOffsetX);
+
 
         redDiv.style.width = getRandom(DIV_SIZE_MIN,DIV_SIZE_MAX) + "px";
         redDiv.style.height = getRandom(DIV_SIZE_MIN,DIV_SIZE_MAX) + "px";
@@ -300,31 +302,28 @@
 
       function applyMotionParallax(parallax_dh, parallax_dv) {
 
-        // first cache zTranslateInfoStrs for all possible values of randZ
+        // constants for this parallax
         var dh = parallax_dh * PARALLAX_EXAGGERATION_FACTOR;
         var dv = parallax_dv * PARALLAX_EXAGGERATION_FACTOR;
         var average_div_size_offset = (DIV_SIZE_MIN+DIV_SIZE_MAX)/2;
-        // console.log(`parallax: dh:${parallax_dh} dv:${parallax_dv}`);
-        var canvas_dx = getCanvasHzCtr() - average_div_size_offset/2;
-        var canvas_dy = 0;
-        zTranslateInfoStrs = [];
-        for (var randZ = RANDZ_MIN; randZ <= RANDZ_MAX; randZ++) {
-          var zTranslateInfoStr = getZTranslateInfoStr(
-            dh, dv, randZ, canvas_dx, canvas_dy );
-          zInfoIdx = randZ - RANDZ_MIN;
-          zTranslateInfoStrs[zInfoIdx] = zTranslateInfoStr;
-          // console.log(`randZ:${randZ} zTranslateInfoStr:${zTranslateInfoStr}`);
-        }
 
-        // apply the cached zTranslateInfoStr
+        // compute translations for each div
         var redDivs = canvas.getElementsByClassName("red-div");
         for (var i = 0; i < redDivs.length; i++) {
           var redDiv = redDivs[i];
           var randZ = parseInt(
             redDiv.attributes.getNamedItem("data-rand-z").value
           );
-          var zInfoIdx = randZ - RANDZ_MIN;
-          var zTranslateInfoStr = zTranslateInfoStrs[zInfoIdx];
+          var randOffsetX = parseInt(
+            redDiv.attributes.getNamedItem("data-rand-offset-x").value
+          );
+
+          var canvas_dx = getCanvasHzCtr() - average_div_size_offset/2 + randOffsetX
+          var canvas_dy = 0;
+
+          var zTranslateInfoStr = getZTranslateInfoStr(
+            dh, dv, randZ, canvas_dx, canvas_dy );
+  
           redDiv.style.translate = zTranslateInfoStr;
         }
       }
