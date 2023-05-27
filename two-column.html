@@ -48,6 +48,7 @@
         height: 150px;
         margin: 20px auto;
         background-color: red;
+        border: 1px solid white;
       }
 
       #center-div {
@@ -56,7 +57,7 @@
         position: absolute;
         top: 50%;
         left: 50%;
-        transform: translate(-50%, -50%);
+        translate: translate(-50%, -50%);
         border: 1px solid white;
         z-index: 10;
       }
@@ -77,6 +78,66 @@
     </div>
 
     <script>
+      let NUM_DIVS = 100;
+      let DIV_SIZE_MIN = 150;
+      let DIV_SIZE_MAX = 150;
+      let DIV_MARGIN_MAX = 20;
+      let DIV_X_OFFSET_MAX = 50;
+      let DIV_Y_OFFSET_MAX = 50;
+      let DIV_VT_MARGIN = 20;
+      let PARALLAX_EXAGGERATION_FACTOR = 1.0;
+      let RANDZ_MIN = 1;
+      let RANDZ_MAX = 8;
+
+      // returns a string between 100% and 12.8%
+      function getZbrightnessStr(randZ) {
+        val = linearInterp(randZ, RANDZ_MIN, 1.0, RANDZ_MAX, 0.5);
+        val = Math.round(val * 100) / 100;
+        var perc = `${100 * val}%`;
+        return `brightness(${perc})`;
+      }
+
+      function getZscale(randZ) {
+        return (5 * 1.0) / randZ;
+      }
+
+      function toFixedPoint(value, point) {
+        return value.toFixed(point);
+      }
+
+      /**
+       * Summary. Returns the translate string used to transform
+       * any div's x,y coordinates into canvas-relative coordinates.
+       * this assortment of divs has only a fixed number of possible
+       * randZ values so the results of this function are cashed for
+       * speed of access.
+       *
+       * Description. (use period)
+       * @param {float}  dh           the horizontal parallax offset value
+       * @param {float}  dv           the vertical parallax offet value
+       * @param {int}    randZ        the random Z depth assigned to every div
+       *                              with an integer value between RANDZ_MIN and RANDZ_MAX
+       * @param {float}  canvas_dx    the x value used to convert div.x to canvas-relative position
+       * @param {float}  canvas_dy    the y value used to convert div.y canvas-relative position
+       *
+       * @return {str} Return a string with format "12.02px -156.79px"
+       */
+      function getZTranslateInfoStr(dh, dv, randZ, canvas_dx, canvas_dy) {
+
+        zScale = getZscale(randZ);
+
+        // console.log(`getZTranslateInfoStr: dh:${dh} dv:${dv} randZ:${randZ} dx:${canvas_dx} dy:${canvas_dy}`);
+
+        // by definition, divs have zero mean hzCtrs so canvas translation is required
+        dx = toFixedPoint(dh * zScale + canvas_dx, 2);
+        dy = toFixedPoint(dv * zScale + canvas_dy, 2);
+        zTranslateInfoStr = `${dx}px ${dy}px`;
+
+        // console.log(`getZTranslateInfoStr: dx:${dx} dy:${dy} dh:${dh} dv:${dv} randZ:${randZ} canvas ${canvas_dx},${canvas_dy}`);
+
+        return zTranslateInfoStr;
+      }
+
       // Function to update the report element
       function report(message) {
         document.getElementById("report").innerHTML = message;
@@ -89,6 +150,13 @@
       function getRandomInt(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
       }
+      function getRandom(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      // return the y value given x
+      const linearInterp = (x, x1, y1, x2, y2) =>
+        y1 + ((x - x1) * (y2 - y1)) / (x2 - x1);
 
       // Function to create each red div with additional properties
       function createRedDiv() {
@@ -96,20 +164,28 @@
         redDiv.className = "red-div";
 
         document.getElementById("canvas").appendChild(redDiv);
-        var redDivRect = redDiv.getBoundingClientRect();
-        var origCtrX = redDivRect.left + redDivRect.width / 2;
-        var origCtrY = redDivRect.top + redDivRect.height / 2;
-        var randZ = getRandomInt(1, 8);
 
-        redDiv.setAttribute("data-orig-ctr-x", origCtrX);
-        redDiv.setAttribute("data-orig-ctr-y", origCtrY);
+        var randZ = getRandomInt(RANDZ_MIN, RANDZ_MAX);
         redDiv.setAttribute("data-rand-z", randZ);
-        redDiv.setAttribute("data-orig-bounding-client-rect",JSON.stringify(redDivRect));
-        redDiv.setAttribute("data-orig-offset-left", Number(redDiv.offsetLeft));
-        redDiv.setAttribute("data-orig-offset-top", Number(redDiv.offsetTop));
+        var brightnessStr = getZbrightnessStr(randZ);
+
+        redDiv.style.width = getRandom(DIV_SIZE_MIN,DIV_SIZE_MAX) + "px";
+        redDiv.style.height = getRandom(DIV_SIZE_MIN,DIV_SIZE_MAX) + "px";
+
+        var margin_hz = 0;
+        var margin_vt = getRandom(-DIV_MARGIN_MAX,DIV_MARGIN_MAX);
+        redDiv.style.margin = `${margin_hz}px ${margin_vt}px`;
+
+        //var translateX =  Math.floor(Math.random() * (100 - (-100) + 1) - 100);
+        //console.log(`translateX: ${translateX}`);
+        //redDiv.style.transform = `translateX(${translateX}px`;
+
+        redDiv.style.zIndex = -randZ;
+        redDiv.innerHTML = `zIndex:${-randZ}`;
+        redDiv.style.filter = brightnessStr;
         return redDiv;
       }
-      
+
       // Function to update the report element
       function updateReport() {
         var reportMessage = generateReportMessage();
@@ -129,17 +205,41 @@
         var canvasScrollTop = getCanvasScrollTop();
         var canvasOffsetHeight = getCanvasOffsetHeight();
 
-        var reportMessage = "Window event type: " + window.event.type + "\n" +
-        "Red-Div Horizontal Center: " + redDivHzCtr + "\n" +
-        "Canvas Horizontal Center: " + canvasHzCtr + "\n" +
-        "Left Column Horizontal Center: " + leftColumnHzCtr + "\n" +
-        "Window Horizontal Center: " + windowHzCtr + "\n" +
-        "Center-Div Horizontal Center: " + centerDivHzCtr + "\n" +
-        "Center-Div Vertical Center: " + centerDivVtCtr + "\n" +
-        "Left Column ScrollTop: " + leftColumnScrollTop + "\n" +
-        "Left Column OffsetHeight: " + leftColumnOffsetHeight + "\n" +
-        "Canvas ScrollTop: " + canvasScrollTop + "\n" +
-        "Canvas OffsetHeight: " + canvasOffsetHeight;
+        var reportMessage =
+          "Window event type: " +
+          window.event.type +
+          "\n" +
+          "Red-Div Horizontal Center: " +
+          redDivHzCtr +
+          "\n" +
+          "Canvas Horizontal Center: " +
+          canvasHzCtr +
+          "\n" +
+          "Left Column Horizontal Center: " +
+          leftColumnHzCtr +
+          "\n" +
+          "Window Horizontal Center: " +
+          windowHzCtr +
+          "\n" +
+          "Center-Div Horizontal Center: " +
+          centerDivHzCtr +
+          "\n" +
+          "Center-Div Vertical Center: " +
+          centerDivVtCtr +
+          "\n" +
+          "Left Column ScrollTop: " +
+          leftColumnScrollTop +
+          "\n" +
+          "Left Column OffsetHeight: " +
+          leftColumnOffsetHeight +
+          "\n" +
+          "Canvas ScrollTop: " +
+          canvasScrollTop +
+          "\n" +
+          "Canvas OffsetHeight: " +
+          canvasOffsetHeight + 
+          "\n";
+
 
         return reportMessage;
       }
@@ -149,7 +249,8 @@
         var windowWidth = window.innerWidth;
         var leftColumnWidth = windowWidth / 2;
 
-        document.getElementById("left-column").style.width = leftColumnWidth + "px";
+        document.getElementById("left-column").style.width =
+          leftColumnWidth + "px";
         document.getElementById("canvas").style.width = leftColumnWidth + "px";
 
         updateRedDivs();
@@ -189,7 +290,8 @@
         var canvas = document.getElementById("canvas");
         var redDivRect = redDiv.getBoundingClientRect();
         var canvasRect = canvas.getBoundingClientRect();
-        var redDivHzCtr = redDivRect.left - canvasRect.left + (redDivRect.width / 2);
+        var redDivHzCtr =
+          redDivRect.left - canvasRect.left + redDivRect.width / 2;
         return redDivHzCtr;
       }
 
@@ -217,7 +319,8 @@
       function getCenterDivHzCtr() {
         var centerDiv = document.getElementById("center-div");
         var canvas = document.getElementById("canvas");
-        var centerDivHzCtr = centerDiv.offsetLeft - canvas.offsetLeft + centerDiv.offsetWidth / 2;
+        var centerDivHzCtr =
+          centerDiv.offsetLeft - canvas.offsetLeft + centerDiv.offsetWidth / 2;
         return centerDivHzCtr;
       }
 
@@ -228,7 +331,8 @@
         var canvas = document.getElementById("canvas");
         var centerDivVtCtr =
           leftColumn.offsetHeight / 2 +
-          canvas.offsetTop - leftColumn.scrollTop +
+          canvas.offsetTop -
+          leftColumn.scrollTop +
           centerDiv.offsetHeight / 2;
         return centerDivVtCtr;
       }
@@ -274,20 +378,36 @@
         centerDiv.style.top = top + "px";
       }
 
-      function applyMotionParallax(parallax_dh,parallax_dv) {
+      function applyMotionParallax(parallax_dh, parallax_dv) {
+
+        // first cache zTranslateInfoStrs for all possible values of randZ
+        var dh = parallax_dh * PARALLAX_EXAGGERATION_FACTOR;
+        var dv = parallax_dv * PARALLAX_EXAGGERATION_FACTOR;
+
+        // console.log(`parallax: dh:${parallax_dh} dv:${parallax_dv}`);
+
+        var canvas_dx = 0; // getCanvasHzCtr();
+        var canvas_dy = 0;
+        zTranslateInfoStrs = [];
+        for (var randZ = RANDZ_MIN; randZ <= RANDZ_MAX; randZ++) {
+          var zTranslateInfoStr = getZTranslateInfoStr(
+            dh, dv, randZ, canvas_dx, canvas_dy );
+          zInfoIdx = randZ - RANDZ_MIN;
+          zTranslateInfoStrs[zInfoIdx] = zTranslateInfoStr;
+          // console.log(`randZ:${randZ} zTranslateInfoStr:${zTranslateInfoStr}`);
+        }
+
+        // apply the cached zTranslateInfoStr
         var redDivs = canvas.getElementsByClassName("red-div");
         for (var i = 0; i < redDivs.length; i++) {
           var redDiv = redDivs[i];
-          var orig_offset_top_str = redDiv.attributes.getNamedItem('data-orig-offset-top').value;
-          var orig_offset_left_str = redDiv.attributes.getNamedItem('data-orig-offset-left').value;
-
-          var origTop = parseInt(orig_offset_top_str);
-          var origLeft = parseInt(orig_offset_left_str);
-          var newTop = origTop + parallax_dv + "px";
-          var newLeft = origLeft + parallax_dh + "px";
-          redDiv.style.top = newTop;
-          redDiv.style.left = newLeft;
-          console.log("redDiv["+i+"] style.left:" + redDiv.style.left + " style.top:" + redDiv.style.top);
+          var randZ = parseInt(
+            redDiv.attributes.getNamedItem("data-rand-z").value
+          );
+          var zInfoIdx = randZ - RANDZ_MIN;
+          var zTranslateInfoStr = zTranslateInfoStrs[zInfoIdx];
+          redDiv.style.translate = zTranslateInfoStr;
+          //redDiv.style.transition = "all 500s";
         }
       }
 
@@ -308,7 +428,7 @@
         var parallax_dh = mouseX - centerDivX;
         var parallax_dv = mouseY - centerDivY;
 
-        applyMotionParallax(parallax_dh,parallax_dv);
+        applyMotionParallax(parallax_dh, parallax_dv);
       }
 
       // Attach event listeners
@@ -317,12 +437,12 @@
       document
         .getElementById("left-column")
         .addEventListener("scroll", handleLeftColumnScroll);
-      
-        var canvas = document.getElementById("canvas");
+
+      var canvas = document.getElementById("canvas");
       canvas.addEventListener("mousemove", handleCanvasMouseMove);
 
       // Generate 10 red divs with additional properties
-      for (var i = 0; i < 10; i++) {
+      for (var i = 0; i < NUM_DIVS; i++) {
         var redDiv = createRedDiv();
         canvas.appendChild(redDiv);
       }

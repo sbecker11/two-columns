@@ -15,11 +15,9 @@ two-column html files.
 
 ## two-column.html
 
-The original focus of this project was
-to use mousemove events to simulate
-motion parallax on a stack of red divs.
+working thanks to css translate style
 
-The chat history for this work can be found here:
+The beginning chat history for this work can be found here:
 https://chat.openai.com/share/b7c269db-49b0-47b9-8fcb-e14a0ff89c78
 
 Efforts on this approach have been
