@@ -245,6 +245,7 @@
 
       // Function to handle window load event
       function handleLoad() {
+        handleLeftColumnMouseMove();
         updateReport();
       }
 
@@ -330,32 +331,21 @@
       }
 
       // Function to handle mousemove event on the window
-      //function handleWindowMouseMove(event) {
-//
-      //  var window = document.getElementById("container");
-      //  var windowRect = window.getBoundingClientRect();
-      //  var mouseX = event.clientX - windowRect.left;
-      //  var mouseY = event.clientY - windowRect.top;
-//
-      //  centerDivX = windowRect.width / 2;
-      //  centerDivY = windowRect.height / 2;
-//
-      //  var parallax_dh = mouseX - centerDivX;
-      //  var parallax_dv = mouseY - centerDivY;
-//
-      //  applyMotionParallax(parallax_dh, parallax_dv);
-      //}
-      
-      // Function to handle mousemove event on the window
+      // if event is null, use centerDiv as mouse location
       function handleLeftColumnMouseMove(event) {
 
         var leftColumn = document.getElementById("left-column");
         var leftColumnRect = leftColumn.getBoundingClientRect();
-        var mouseX = event.clientX - leftColumnRect.left;
-        var mouseY = event.clientY - leftColumnRect.top;
 
         centerDivX = leftColumnRect.width / 2;
         centerDivY = leftColumnRect.height / 2;
+
+        var mouseX = centerDivX;
+        var mouseY = centerDivY;
+        if ( event )  {
+          mouseX = event.clientX;
+          mouseY = event.clientY;
+        }
 
         var parallax_dh = mouseX - centerDivX;
         var parallax_dv = mouseY - centerDivY;
@@ -369,6 +359,7 @@
       leftColumn = document.getElementById("left-column");
       leftColumn.addEventListener("scroll", handleLeftColumnScroll);
       leftColumn.addEventListener("mousemove", handleLeftColumnMouseMove);
+      leftColumn.addEventListener("load", handleLeftColumnMouseMove);
 
       // Generate NUM_DIVS red divs with additional properties
       var canvas = document.getElementById("canvas");
