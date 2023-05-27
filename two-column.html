@@ -51,16 +51,6 @@
         border: 1px solid white;
       }
 
-      #center-div {
-        width: 2px;
-        height: 2px;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        translate: translate(-50%, -50%);
-        border: 1px solid white;
-        z-index: 10;
-      }
     </style>
   </head>
   <body>
@@ -69,7 +59,6 @@
         <div id="canvas">
           <!-- 10 red divs will be dynamically added here -->
         </div>
-        <div id="center-div"></div>
       </div>
       <div id="right-column">
         <canvas id="canvas"></canvas>
@@ -198,8 +187,8 @@
         var canvasHzCtr = getCanvasHzCtr();
         var leftColumnHzCtr = getLeftColumnHzCtr();
         var windowHzCtr = getWindowHzCtr();
-        var centerDivHzCtr = getCenterDivHzCtr();
-        var centerDivVtCtr = getCenterDivVtCtr();
+        //var centerDivHzCtr = getCenterDivHzCtr();
+        //var centerDivVtCtr = getCenterDivVtCtr();
         var leftColumnScrollTop = getLeftColumnScrollTop();
         var leftColumnOffsetHeight = getLeftColumnOffsetHeight();
         var canvasScrollTop = getCanvasScrollTop();
@@ -220,12 +209,6 @@
           "\n" +
           "Window Horizontal Center: " +
           windowHzCtr +
-          "\n" +
-          "Center-Div Horizontal Center: " +
-          centerDivHzCtr +
-          "\n" +
-          "Center-Div Vertical Center: " +
-          centerDivVtCtr +
           "\n" +
           "Left Column ScrollTop: " +
           leftColumnScrollTop +
@@ -255,37 +238,37 @@
           leftColumnWidth + "px";
         document.getElementById("canvas").style.width = leftColumnWidth + "px";
 
-        updateRedDivs();
-        centerDiv();
+        //updateRedDivs();
+        //centerDiv();
         updateReport();
       }
 
       // Function to handle window load event
       function handleLoad() {
-        updateRedDivs();
-        centerDiv();
+        //updateRedDivs();
+        //centerDiv();
         updateReport();
       }
 
       // Function to handle left-column scroll event
       function handleLeftColumnScroll() {
-        updateRedDivs();
-        centerDiv();
+        //updateRedDivs();
+        //centerDiv();
         updateReport();
       }
 
       // Function to update the horizontal center (hz-ctr) of red-divs
-      function updateRedDivs() {
-        var canvas = document.getElementById("canvas");
-        var redDivs = canvas.getElementsByClassName("red-div");
-        var canvasHzCtr = canvas.offsetWidth / 2;
-
-        for (var i = 0; i < redDivs.length; i++) {
-          var redDiv = redDivs[i];
-          var redDivHzCtr = redDiv.offsetWidth / 2;
-          redDiv.style.left = canvasHzCtr - redDivHzCtr + "px";
-        }
-      }
+      //function updateRedDivs() {
+      //  var canvas = document.getElementById("canvas");
+      //  var redDivs = canvas.getElementsByClassName("red-div");
+      //  var canvasHzCtr = canvas.offsetWidth / 2;
+//
+      //  for (var i = 0; i < redDivs.length; i++) {
+      //    var redDiv = redDivs[i];
+      //    var redDivHzCtr = redDiv.offsetWidth / 2;
+      //    redDiv.style.left = canvasHzCtr - redDivHzCtr + "px";
+      //  }
+      //}
 
       // Function to get the canvas-relative horizontal center (hz-ctr) of the first red div
       function getFirstRedDivHzCtr() {
@@ -318,28 +301,6 @@
         return windowHzCtr;
       }
 
-      // Function to get the horizontal center (hz-ctr) of the center div
-      function getCenterDivHzCtr() {
-        var centerDiv = document.getElementById("center-div");
-        var canvas = document.getElementById("canvas");
-        var centerDivHzCtr =
-          centerDiv.offsetLeft - canvas.offsetLeft + centerDiv.offsetWidth / 2;
-        return centerDivHzCtr;
-      }
-
-      // Function to get the vertical center (vt-ctr) of the center div
-      function getCenterDivVtCtr() {
-        var centerDiv = document.getElementById("center-div");
-        var leftColumn = document.getElementById("left-column");
-        var canvas = document.getElementById("canvas");
-        var centerDivVtCtr =
-          leftColumn.offsetHeight / 2 +
-          canvas.offsetTop -
-          leftColumn.scrollTop +
-          centerDiv.offsetHeight / 2;
-        return centerDivVtCtr;
-      }
-
       // Function to get the scrollTop of the left column
       function getLeftColumnScrollTop() {
         var leftColumn = document.getElementById("left-column");
@@ -369,17 +330,17 @@
       }
 
       // Function to center the div in the left column
-      function centerDiv() {
-        var leftColumn = document.getElementById("left-column");
-        var canvas = document.getElementById("canvas");
-        var centerDiv = document.getElementById("center-div");
-
-        var scrollTop = leftColumn.scrollTop;
-        var top =
-          (leftColumn.offsetHeight - centerDiv.offsetHeight) / 2 + scrollTop;
-
-        centerDiv.style.top = top + "px";
-      }
+      //function centerDiv() {
+      //  var leftColumn = document.getElementById("left-column");
+      //  var canvas = document.getElementById("canvas");
+      //  var centerDiv = document.getElementById("center-div");
+//
+      //  var scrollTop = leftColumn.scrollTop;
+      //  var top =
+      //    (leftColumn.offsetHeight - centerDiv.offsetHeight) / 2 + scrollTop;
+//
+      //  centerDiv.style.top = top + "px";
+      //}
 
       function applyMotionParallax(parallax_dh, parallax_dv) {
 
@@ -429,27 +390,6 @@
 
         applyMotionParallax(parallax_dh, parallax_dv);
       }
-
-
-      // Function to handle mousemove event on the canvas
-      // function handleCanvasMouseMove(event) {
-      //   var canvas = document.getElementById("canvas");
-      //   var canvasRect = canvas.getBoundingClientRect();
-      //   var mouseX = event.clientX - canvasRect.left;
-      //   var mouseY = event.clientY - canvasRect.top;
-// 
-      //   var centerDiv = document.getElementById("center-div");
-      //   var centerDivRect = centerDiv.getBoundingClientRect();
-      //   var centerDivX =
-      //     centerDivRect.left - canvasRect.left + centerDivRect.width / 2;
-      //   var centerDivY =
-      //     centerDivRect.top - canvasRect.top + centerDivRect.height / 2;
-// 
-      //   var parallax_dh = mouseX - centerDivX;
-      //   var parallax_dv = mouseY - centerDivY;
-// 
-      //   applyMotionParallax(parallax_dh, parallax_dv);
-      // }
 
       // Attach event listeners
       window.addEventListener("resize", handleResize);
