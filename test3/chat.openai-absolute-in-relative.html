@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>absolute-in-relative</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      #container {
+        display: flex;
+        height: 100%;
+      }
+
+      #right-column {
+        flex: 1;
+        height: 100%;
+        overflow: hidden;
+        background: lightblue;
+      }
+
+      #left-column {
+        flex: 1;
+        height: 100%;
+        overflow-x: hidden;
+        background: blue;
+        position: relative;
+      }
+
+      #canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        height: calc(20 * 150px); /* Adjust the height as needed */
+      }
+
+      .red-div {
+        width: 20px;
+        height: 20px;
+        background: red;
+        position: absolute;
+        top: 0;
+        border:5px solid white;  /* border width is scalable */
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <div id="left-column">
+        <div id="canvas"></div>
+      </div>
+      <div id="right-column"></div>
+    </div>
+
+    <script>
+      const MAX_OFFSET = 50;
+      const MARGIN_VT = -25;
+      const MEAN_HEIGHT = 150;
+      const MEAN_WIDTH = 150;
+
+      const MIN_Z = 1;
+      const MAX_Z = 8;
+      const PARALLAX_EXAGGERATION_FACTOR = 1.0;
+
+      // returns a filter brightness string between 100% and 75%
+      function getZbrightnessStr(z) {
+        var bright = linearInterp(z, MIN_Z, 1.0, MAX_Z, 0.75);
+        bright = Math.round(bright * 100) / 100;
+        var perc = `${100 * bright}%`;
+        return `brightness(${perc})`;
+      }
+
+      // returns a filter blur string
+      function getZblurStr(z) {
+        var blur = z / 2;
+        return `blur(${blur}px)`;
+      }
+
+      // returns s floating point number
+      function getZscale(z) {
+        return (5 * 1.0) / z;
+      }
+
+      // return the y value given x
+      const linearInterp = (x, x1, y1, x2, y2) =>
+        y1 + ((x - x1) * (y2 - y1)) / (x2 - x1);
+
+      function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function createRedDivs() {
+        const leftColumn = document.getElementById("left-column");
+        const canvas = document.getElementById("canvas");
+        var prevZIndex = null; // Track the previous z-index value
+        for (let id = 0; id < 10; id++) {
+          const redDiv = document.createElement("div");
+          redDiv.className = "red-div";
+
+          redDiv.style.height = MEAN_HEIGHT + "px";
+          const verticalOffset = getRandomInt(-MAX_OFFSET, MAX_OFFSET);
+          var verticalDistance = MEAN_HEIGHT + MARGIN_VT;
+          redDiv.style.top = `${
+            MEAN_HEIGHT/2 + id * verticalDistance + verticalOffset
+          }px`;
+
+          redDiv.style.width = MEAN_WIDTH + 'px';
+          redDiv.style.left = `${getRandomInt(-MAX_OFFSET, MAX_OFFSET)}px`;
+
+          var z = getRandomInt(1, 8);
+
+          while (z === prevZIndex) {
+            // Generate a new z if it's the same as the previous one
+            z = getRandomInt(1, 8);
+          }
+
+          redDiv.style.zIndex = 10 - z; // Set the z-index of red divs
+
+          var brightnessStr = getZbrightnessStr(z);
+          var blurStr = getZblurStr(z);
+  
+          filtersStrs = `${brightnessStr} ${blurStr}`;
+          redDiv.style.filter = filtersStrs;
+
+          canvas.appendChild(redDiv);
+        }
+      }
+
+      function renderRedDivsAtLeftColumnCenter() {
+        const leftColumn = document.getElementById("left-column");
+        const redDivs = document.getElementsByClassName("red-div");
+        const leftColumnCenter = leftColumn.offsetWidth / 2;
+
+        for (let i = 0; i < redDivs.length; i++) {
+          const redDiv = redDivs[i];
+          const redDivWidth = redDiv.offsetWidth;
+          const translation = leftColumnCenter - redDivWidth / 2;
+          redDiv.style.transform = `translateX(${translation}px)`;
+        }
+
+        canvas.style.height = `${leftColumn.scrollHeight}px`;
+      }
+
+      window.onload = function () {
+        createRedDivs();
+        renderRedDivsAtLeftColumnCenter();
+      };
+
+      window.onresize = function () {
+        renderRedDivsAtLeftColumnCenter();
+      };
+    </script>
+  </body>
+</html>
