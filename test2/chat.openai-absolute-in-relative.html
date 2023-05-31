@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>absolute-in-relative</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        #container {
+            display: flex;
+            height: 100%;
+        }
+        
+        #left-column {
+            flex: 1;
+            position: relative;
+            background: blue;
+            overflow-x: hidden;
+            overflow-y: scroll;
+            overscroll-behavior: contain;
+        }
+        
+        #right-column {
+            flex: 1;
+            background: lightblue;
+        }
+        
+        #canvas {
+            position: absolute;
+            height: 1000px;
+        }
+        
+        .red-div {
+            width: 20px;
+            height: 20px;
+            background: red;
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="left-column">
+            <div id="canvas"></div>
+        </div>
+        <div id="right-column"></div>
+    </div>
+
+    <script>
+        function createRedDivs() {
+            var canvas = document.getElementById('canvas');
+            for (var id = 0; id < 10; id++) {
+                var redDiv = document.createElement('div');
+                redDiv.className = 'red-div';
+                redDiv.style.top = (20 + id * 30) + 'px';
+                redDiv.style.left = '100px';
+                canvas.appendChild(redDiv);
+            }
+        }
+
+        function centerRedDivs() {
+            var canvas = document.getElementById('canvas');
+            var redDivs = canvas.getElementsByClassName('red-div');
+            var leftColumnWidth = document.getElementById('left-column').clientWidth;
+            var centerX = leftColumnWidth / 2;
+            
+            for (var i = 0; i < redDivs.length; i++) {
+                var redDiv = redDivs[i];
+                var redDivWidth = redDiv.clientWidth;
+                var leftOffset = centerX - redDivWidth / 2;
+                redDiv.style.left = leftOffset + 'px';
+            }
+        }
+
+        window.addEventListener('resize', function () {
+            centerRedDivs();
+        });
+
+        window.addEventListener('load', function () {
+            createRedDivs();
+            centerRedDivs();
+        });
+    </script>
+</body>
+</html>

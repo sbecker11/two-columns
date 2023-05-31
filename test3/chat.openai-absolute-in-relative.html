@@ -37,7 +37,7 @@
         width: 100%;
         overflow-y: auto;
         overscroll-behavior: contain;
-        height: calc(20 * 150px); /* Adjust the height as needed */
+        height: 2000px;
       }
 
       .red-div {
@@ -46,7 +46,7 @@
         background: red;
         position: absolute;
         top: 0;
-        border:5px solid white;  /* border width is scalable */
+        border: 5px solid white; /* border width is scalable */
       }
     </style>
   </head>
@@ -59,14 +59,15 @@
     </div>
 
     <script>
-      const MAX_OFFSET = 50;
+      const NUM_DIVS = 14;
+      const MAX_OFFSET = 100;
       const MARGIN_VT = -25;
       const MEAN_HEIGHT = 150;
       const MEAN_WIDTH = 150;
 
       const MIN_Z = 1;
       const MAX_Z = 8;
-      const PARALLAX_EXAGGERATION_FACTOR = 1.0;
+      const PARALLAX_EXAGGERATION_FACTOR = 0.50;
 
       // returns a filter brightness string between 100% and 75%
       function getZbrightnessStr(z) {
@@ -95,11 +96,21 @@
         return Math.floor(Math.random() * (max - min + 1)) + min;
       }
 
+      // returns given number with precision-digit
+      // precision
+      function toFixedPoint(value, precision) {
+        if (value) value = parseInt(value.toFixed(precision));
+        return value;
+      }
+
+      // adds a vertical stack of redDivs to #canvas
+      // each with random x,y offsets and random
+      // z levels, and z-varied brightness and blur.
       function createRedDivs() {
         const leftColumn = document.getElementById("left-column");
         const canvas = document.getElementById("canvas");
         var prevZIndex = null; // Track the previous z-index value
-        for (let id = 0; id < 10; id++) {
+        for (let id = 0; id < NUM_DIVS; id++) {
           const redDiv = document.createElement("div");
           redDiv.className = "red-div";
 
@@ -107,10 +118,10 @@
           const verticalOffset = getRandomInt(-MAX_OFFSET, MAX_OFFSET);
           var verticalDistance = MEAN_HEIGHT + MARGIN_VT;
           redDiv.style.top = `${
-            MEAN_HEIGHT/2 + id * verticalDistance + verticalOffset
+            MEAN_HEIGHT / 2 + id * verticalDistance + verticalOffset
           }px`;
 
-          redDiv.style.width = MEAN_WIDTH + 'px';
+          redDiv.style.width = MEAN_WIDTH + "px";
           redDiv.style.left = `${getRandomInt(-MAX_OFFSET, MAX_OFFSET)}px`;
 
           var z = getRandomInt(1, 8);
@@ -124,7 +135,7 @@
 
           var brightnessStr = getZbrightnessStr(z);
           var blurStr = getZblurStr(z);
-  
+
           filtersStrs = `${brightnessStr} ${blurStr}`;
           redDiv.style.filter = filtersStrs;
 
@@ -132,29 +143,161 @@
         }
       }
 
+      /**
+       * Summary. Returns the translate string used to transform
+       * any redDiv's x,y coordinates into canvas-relative coordinates.
+       * this assortment of divs has only a fixed number of possible
+       * z values so the results of this function are cashed for
+       * speed of access.
+       *
+       * Description. (use period)
+       * @param {float}  dh           the horizontal parallax offset value
+       * @param {float}  dv           the vertical parallax offet value
+       * @param {int}    z        the random Z depth assigned to every redDiv
+       *                              with an integer value between MIN_Z and MAX_Z
+       * @param {float}  canvas_dx    the x value used to convert redDiv.x to canvas-relative position
+       * @param {float}  canvas_dy    the y value used to convert redDiv.y canvas-relative position
+       *
+       * @return {str} Return a string with format "12.02px -156.79px"
+       */
+      function getZTranslateStr(dh, dv, z, canvas_dx, canvas_dy) {
+        //if ( z == 5 )
+        //  console.log(`a-getZTranslateStr: dh:${dh} dv:${dv} z:${z} dx:${canvas_dx} dy:${canvas_dy}`);
+
+        zScale = getZscale(z);
+
+        // by definition, divs have zero mean hzCtrs so canvas translation is required
+        dx = toFixedPoint(dh * zScale + canvas_dx, 2);
+        dy = toFixedPoint(dv * zScale + canvas_dy, 2);
+        zTranslateStr = `${dx}px ${dy}px`;
+        //if ( z == 5 )
+        //  console.log(`b-getZTranslateStr: dx:${dx} dy:${dy} dh:${dh} dv:${dv} z:${z} canvas ${canvas_dx},${canvas_dy}`);
+
+        return zTranslateStr;
+      }
+
+      // return the horizontal center of the left-column
+      function getLeftColumnHzCtr() {
+        var leftColumn = document.getElementById("left-column");
+        return leftColumn.offsetWidth / 2;
+      }
+      // return the horizontal center of the canvas
+      function getCanvasHzCtr() {
+        var canvas = document.getElementById("canvas");
+        return canvas.offsetWidth / 2;
+      }
+      // return the horizontal center of the given redDiv
+      function getRedDivHzCenter(redDiv) {
+        return redDiv.offsetWidth / 2;
+      }
+
+      // applies z-depth scaled parallax to all redDivs
+      function applyMotionParallax(parallax_dh, parallax_dv) {
+        // constant for the current view
+        var canvasHzCtr =  getCanvasHzCtr();
+
+        // constants for this parallax
+        var dh = parallax_dh * PARALLAX_EXAGGERATION_FACTOR;
+        var dv = parallax_dv * PARALLAX_EXAGGERATION_FACTOR;
+
+        // compute translations for each redDiv
+        var redDivs = canvas.getElementsByClassName("red-div");
+        for (var i = 0; i < redDivs.length; i++) {
+          var redDiv = redDivs[i];
+          var z = 10 - redDiv.style.zIndex;
+
+          // canvas-relative redDiv center
+          var canvas_dx = canvasHzCtr - getRedDivHzCenter(redDiv);
+          var canvas_dy = 0;
+
+          var zTranslateStr = getZTranslateStr(
+            dh,
+            dv,
+            z,
+            canvas_dx,
+            canvas_dy
+          );
+
+          // if ( z == 5 )
+          //   console.log(`applyMotionParallax() canvasHzCtr:${getCanvasHzCtr()} leftColHzCtr:${getLeftColumnHzCtr()} zTranslateStr:${zTranslateStr}`);
+          redDiv.style.translate = zTranslateStr;
+        }
+      }
+
+      // Function to handle transform redDivs according
+      // to current left-column position. Given null
+      // when called from onload, in this case
+      // left-column center as mouse location
+      function handleLeftColumnMouseMove(event) {
+        var leftColumn = document.getElementById("left-column");
+        var leftColumnRect = leftColumn.getBoundingClientRect();
+
+        centerDivX = leftColumnRect.width / 2;
+        centerDivY = leftColumnRect.height / 2;
+
+        var mouseX = centerDivX;
+        var mouseY = centerDivY;
+        if (event) {
+          mouseX = event.clientX;
+          mouseY = event.clientY;
+        }
+
+        var parallax_dh = mouseX - centerDivX;
+        var parallax_dv = mouseY - centerDivY;
+
+        applyMotionParallax(parallax_dh, parallax_dv);
+      }
+
       function renderRedDivsAtLeftColumnCenter() {
         const leftColumn = document.getElementById("left-column");
-        const redDivs = document.getElementsByClassName("red-div");
-        const leftColumnCenter = leftColumn.offsetWidth / 2;
+        const leftColumnCenter = getLeftColumnHzCtr();
 
+        const redDivs = document.getElementsByClassName("red-div");
         for (let i = 0; i < redDivs.length; i++) {
           const redDiv = redDivs[i];
           const redDivWidth = redDiv.offsetWidth;
-          const translation = leftColumnCenter - redDivWidth / 2;
-          redDiv.style.transform = `translateX(${translation}px)`;
+          const trans_dx = leftColumnCenter - redDivWidth / 2;
+          const trans_dy = 0;
+          const translateStr = `${trans_dx}px ${trans_dy}px`;
+
+          // if ( (10 - redDiv.style.zIndex) == 5 )
+          //   console.log(`renderRedDivsAtLeftColumnCenter() canvasHzCtr:${getCanvasHzCtr()} leftColHzCtr:${getLeftColumnHzCtr()}  translateStr:${translateStr}`);
+          redDiv.style.translate = translateStr;
         }
 
         canvas.style.height = `${leftColumn.scrollHeight}px`;
       }
 
-      window.onload = function () {
+      function handleWindowLoad() {
         createRedDivs();
         renderRedDivsAtLeftColumnCenter();
-      };
+      }
 
-      window.onresize = function () {
+      // Function to handle window resize event
+      function handleWindowResize() {
+        // resize the left-column and the canvas since they don't doit themselves?
+        var windowWidth = window.innerWidth;
+        var leftColumnWidth = windowWidth / 2;
+
+        document.getElementById("left-column").style.width =
+          leftColumnWidth + "px";
+        document.getElementById("canvas").style.width = leftColumnWidth + "px";
+
         renderRedDivsAtLeftColumnCenter();
-      };
+      }
+
+      // Function to handle left-column scroll event
+      function handleLeftColumnScroll() {
+      }
+
+      // Attach event listeners
+      window.addEventListener("load", handleWindowLoad);
+      window.addEventListener("resize", handleWindowResize);
+      leftColumn = document.getElementById("left-column");
+      leftColumn.addEventListener("scroll", handleLeftColumnScroll);
+      leftColumn.addEventListener("mousemove", handleLeftColumnMouseMove);
+      leftColumn.addEventListener("load", handleLeftColumnMouseMove);
+
     </script>
   </body>
 </html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two Columns with Canvas</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            height: 100%;
+        }
+        .left-column, .right-column {
+            flex: 1;
+            position: relative;
+            height: 100%;
+        }
+        .left-column {
+            overflow: auto;
+        }
+        .right-column {
+            background-color: darkgrey;
+        }
+        canvas {
+            background-color: black;
+            display: block;
+        }
+        redDiv {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background-color: red;
+            border: 1px solid white;
+        }
+        statusDiv {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border: 1px solid white;
+            margin: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-column">
+            <canvas id="canvas" width="0" height="2000"></canvas>
+            <div id="redDiv"></div>
+        </div>
+        <div class="right-column">
+            <div id="statusDiv"></div>
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const leftColumn = document.querySelector('.left-column');
+        const redDiv = document.getElementById('redDiv');
+        const statusDiv = document.getElementById('statusDiv');
+
+        function updateCanvasWidth() {
+            canvas.width = leftColumn.clientWidth;
+        }
+
+        function positionRedDiv() {
+            redDiv.style.top = '250px';
+            redDiv.style.left = (canvas.width / 2 - redDiv.clientWidth / 2) + 'px';
+        }
+
+        function updateScroll() {
+            leftColumn.scrollLeft = (canvas.width - leftColumn.clientWidth) / 2;
+        }
+
+        function updateStatusDiv() {
+            const centerX = leftColumn.clientWidth / 2;
+            const redDivCenterX = redDiv.offsetLeft + redDiv.clientWidth / 2;
+            const isVisible = Math.abs(centerX - redDivCenterX) <= 1;
+            statusDiv.style.backgroundColor = isVisible ? 'green' : 'red';
+        }
+
+        function onResize() {
+            updateCanvasWidth();
+            positionRedDiv();
+            updateScroll();
+            updateStatusDiv();
+        }
+
+        window.addEventListener('load', onResize);
+        window.addEventListener('resize', onResize);
+    </script>
+</body>
+</html>

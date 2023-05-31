@@ -1,0 +1,16 @@
+create an html page entitled "absolute-in-relative" 
+with embedded style and script
+with  two equal width columns, each with 100% height.
+on window resize, resize both columns to retain equal widths.
+set right-column to autoscroll=false and background=light-blue.
+set left-column to autoscroll vertical = true, autoscroll 
+horizontal = false, overscroll-behavior = contain and background=blue.
+give the left-column a canvas with 1000px height and position=absolute.
+
+on window load add 10 red divs to the canvas as follows
+for id = 0; id<10;  id )
+add a red div to the canvas 
+with width=20px, height=20px  at left=0px and top=(20+idx*30)px
+
+on window resize translate the red-divs so they are horizontally 
+centered within the current left-column width.

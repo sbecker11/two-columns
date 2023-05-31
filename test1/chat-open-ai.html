@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    #container {
+      display: flex;
+      height: 100%;
+    }
+
+    #left-column {
+      flex: 1;
+      position: relative;
+      background-color: #000;
+      color: #fff;
+    }
+
+    #right-column {
+      flex: 1;
+      position: relative;
+      background-color: #333;
+      color: #fff;
+    }
+
+    canvas {
+      width: 100%;
+      height: 2000px;
+      overflow: auto;
+    }
+
+    #redDiv {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      border: 1px solid #fff;
+      background-color: red;
+    }
+
+    #statusDiv {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border: 1px solid #fff;
+      margin: 50px;
+      background-color: transparent;
+      top: 0;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="left-column">
+      <canvas id="canvas"></canvas>
+      <div id="redDiv"></div>
+    </div>
+    <div id="right-column">
+      <div id="statusDiv"></div>
+    </div>
+  </div>
+
+  <script>
+    function centerRedDiv() {
+      const canvas = document.getElementById('canvas');
+      const redDiv = document.getElementById('redDiv');
+      const statusDiv = document.getElementById('statusDiv');
+
+      const canvasWidth = canvas.offsetWidth;
+      const redDivWidth = redDiv.offsetWidth;
+
+      const canvasScrollLeft = (canvas.scrollWidth - canvasWidth) / 2;
+      const redDivLeft = (canvasWidth - redDivWidth) / 2;
+
+      redDiv.style.left = `${redDivLeft}px`;
+
+      if (Math.abs(canvasScrollLeft - redDivLeft) <= 1) {
+        statusDiv.style.backgroundColor = 'green';
+      } else {
+        statusDiv.style.backgroundColor = 'red';
+      }
+    }
+
+    window.onload = function() {
+      centerRedDiv();
+    };
+
+    window.onresize = function() {
+      centerRedDiv();
+    };
+  </script>
+</body>
+</html>

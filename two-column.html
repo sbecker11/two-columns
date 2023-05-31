@@ -56,80 +56,75 @@
     </style>
   </head>
   <body>
-    <div id="container">
-      <div id="left-column">
-        <div id="canvas">
+    <redDiv id="container">
+      <redDiv id="left-column">
+        <redDiv id="canvas">
           <!-- 10 red divs will be dynamically added here -->
-        </div>
-      </div>
-      <div id="right-column">
+        </redDiv>
+      </redDiv>
+      <redDiv id="right-column">
         <canvas id="canvas"></canvas>
         <pre id="report"></pre>
-      </div>
-    </div>
+      </redDiv>
+    </redDiv>
 
     <script>
-      let NUM_DIVS = 100;
-      let DIV_SIZE_MIN = 150;
-      let DIV_SIZE_MAX = 150;
-      let DIV_MARGIN_MAX = 20;
-      let DIV_X_OFFSET_MAX = 200;
-      let DIV_VT_MARGIN = 20;
-      let PARALLAX_EXAGGERATION_FACTOR = 1.0;
-      let RANDZ_MIN = 1;
-      let RANDZ_MAX = 8;
-
-      // returns a string between 100% and 12.8%
-      function getZbrightnessStr(randZ) {
-        val = linearInterp(randZ, RANDZ_MIN, 1.0, RANDZ_MAX, 0.5);
-        val = Math.round(val * 100) / 100;
-        var perc = `${100 * val}%`;
+      const MIN_Z = 1;
+      const MAX_Z = 8;
+      const PARALLAX_EXAGGERATION_FACTOR = 1.0;
+      
+      // returns a filter brightness string between 100% and 12.8%
+      function getZbrightnessStr(z) {
+        var bright = linearInterp(z, MIN_Z, 1.0, MAX_Z, 0.5);
+        bright = Math.round(bright * 100) / 100;
+        var perc = `${100 * bright}%`;
         return `brightness(${perc})`;
       }
 
-      function getZblurStr(randZ) {
-        var blur = randZ/2;
+      // returns a filter blur string 
+      function getZblurStr(z) {
+        var blur = z/2;
         return `blur(${blur}px)`;
       }
 
-      function getZscale(randZ) {
-        return (5 * 1.0) / randZ;
+      // returns s floating point number
+      function getZscale(z) {
+        return (5 * 1.0) / z;
       }
 
       function toFixedPoint(value, point) {
-        if (value) {
-          return value.toFixed(point);
-        }
+        if (value)
+          value = parseInt(value.toFixed(point));
         return value;
       }
 
       /**
        * Summary. Returns the translate string used to transform
-       * any div's x,y coordinates into canvas-relative coordinates.
+       * any redDiv's x,y coordinates into canvas-relative coordinates.
        * this assortment of divs has only a fixed number of possible
-       * randZ values so the results of this function are cashed for
+       * z values so the results of this function are cashed for
        * speed of access.
        *
        * Description. (use period)
        * @param {float}  dh           the horizontal parallax offset value
        * @param {float}  dv           the vertical parallax offet value
-       * @param {int}    randZ        the random Z depth assigned to every div
-       *                              with an integer value between RANDZ_MIN and RANDZ_MAX
-       * @param {float}  canvas_dx    the x value used to convert div.x to canvas-relative position
-       * @param {float}  canvas_dy    the y value used to convert div.y canvas-relative position
+       * @param {int}    z        the random Z depth assigned to every redDiv
+       *                              with an integer value between MIN_Z and MAX_Z
+       * @param {float}  canvas_dx    the x value used to convert redDiv.x to canvas-relative position
+       * @param {float}  canvas_dy    the y value used to convert redDiv.y canvas-relative position
        *
        * @return {str} Return a string with format "12.02px -156.79px"
        */
-      function getZTranslateInfoStr(dh, dv, randZ, canvas_dx, canvas_dy) {
+      function getZTranslateInfoStr(dh, dv, z, canvas_dx, canvas_dy) {
 
-        zScale = getZscale(randZ);
-        // console.log(`getZTranslateInfoStr: dh:${dh} dv:${dv} randZ:${randZ} dx:${canvas_dx} dy:${canvas_dy}`);
+        zScale = getZscale(z);
+        // console.log(`getZTranslateInfoStr: dh:${dh} dv:${dv} z:${z} dx:${canvas_dx} dy:${canvas_dy}`);
 
         // by definition, divs have zero mean hzCtrs so canvas translation is required
         dx = toFixedPoint(dh * zScale + canvas_dx, 2);
         dy = toFixedPoint(dv * zScale + canvas_dy, 2);
         zTranslateInfoStr = `${dx}px ${dy}px`;
-        // console.log(`getZTranslateInfoStr: dx:${dx} dy:${dy} dh:${dh} dv:${dv} randZ:${randZ} canvas ${canvas_dx},${canvas_dy}`);
+        // console.log(`getZTranslateInfoStr: dx:${dx} dy:${dy} dh:${dh} dv:${dv} z:${z} canvas ${canvas_dx},${canvas_dy}`);
 
         return zTranslateInfoStr;
       }
@@ -154,39 +149,6 @@
       const linearInterp = (x, x1, y1, x2, y2) =>
         y1 + ((x - x1) * (y2 - y1)) / (x2 - x1);
 
-      // Function to create each red div with additional properties
-      function createRedDiv(id) {
-        var redDiv = document.createElement("div");
-
-        // set the fundamentals
-        redDiv.setAttribute('id',id);
-        redDiv.classList.add('red-div');
-
-        document.getElementById("canvas").appendChild(redDiv);
-
-        var randZ = getRandomInt(RANDZ_MIN, RANDZ_MAX);
-        redDiv.setAttribute("data-rand-z", randZ);
-        var randOffsetX = getRandom(-DIV_X_OFFSET_MAX,DIV_X_OFFSET_MAX);
-        redDiv.setAttribute("data-rand-offset-x", randOffsetX);
-
-        redDiv.style.width = getRandom(DIV_SIZE_MIN,DIV_SIZE_MAX) + "px";
-        redDiv.style.height = getRandom(DIV_SIZE_MIN,DIV_SIZE_MAX) + "px";
-
-        var margin_hz = 0;
-        var margin_vt = getRandom(-DIV_MARGIN_MAX,DIV_MARGIN_MAX);
-        redDiv.style.margin = `${margin_hz}px ${margin_vt}px`;
-
-        redDiv.style.zIndex = -randZ;
-        redDiv.innerHTML = `zIndex:${-randZ}`;
-
-        var brightnessStr = getZbrightnessStr(randZ);
-        var blurStr = getZblurStr(randZ);
-
-        filtersStrs = `${brightnessStr} ${blurStr}`;
-        redDiv.style.filter = filtersStrs;
-
-        return redDiv;
-      }
 
       // Function to update the report element
       function updateReport() {
@@ -305,36 +267,50 @@
         return offsetHeight;
       }
 
+      function setElementAttributeStrValue(element, name, strValue) {
+        element.setAttribute(name, strValue);
+      }
+      
+      function setElementAttributeIntValue(element, name, intValue) {
+        setElementAttributeStrValue(element, name, intValue ? intValue.toString() : '');
+      }
+      
+      function getElementAttributeStrValue(element, name) {
+        return element.getAttribute(name);
+      }
+      
+      function getElementAttributeIntValue(element, name) {
+        const strValue = getElementAttributeStrValue(element, name);
+        const parsedValue = parseInt(strValue, 10);
+        return isNaN(parsedValue) ? null : parsedValue;
+      }
+      
+      // Function that uses the given motionParallax to render
+      // each pre-defined redDiv to its parent canvas
       function applyMotionParallax(parallax_dh, parallax_dv) {
 
         // constants for this parallax
         var dh = parallax_dh * PARALLAX_EXAGGERATION_FACTOR;
         var dv = parallax_dv * PARALLAX_EXAGGERATION_FACTOR;
-        var average_div_size_offset = (DIV_SIZE_MIN+DIV_SIZE_MAX)/2;
 
-        // compute translations for each div
+        var canvas_dx = getCanvasHzCtr();
+        var canvas_dy = 0;
+
+        // compute translations for each redDiv
         var redDivs = canvas.getElementsByClassName("red-div");
         for (var i = 0; i < redDivs.length; i++) {
           var redDiv = redDivs[i];
-          var randZ = parseInt(
-            redDiv.attributes.getNamedItem("data-rand-z").value
-          );
-          var randOffsetX = parseInt(
-            redDiv.attributes.getNamedItem("data-rand-offset-x").value
-          );
-
-          var canvas_dx = getCanvasHzCtr() - average_div_size_offset/2 + randOffsetX
-          var canvas_dy = 0;
+          var z = -redDiv.style.zIndex;
 
           var zTranslateInfoStr = getZTranslateInfoStr(
-            dh, dv, randZ, canvas_dx, canvas_dy );
+            dh, dv, z, canvas_dx, canvas_dy );
   
           redDiv.style.translate = zTranslateInfoStr;
         }
       }
 
-      // Function to handle mousemove event on the window
-      // if event is null, use centerDiv as mouse location
+      // Function to handle mousemove event on left-column
+      // if event is null, use left-column cntr as mouse location
       function handleLeftColumnMouseMove(event) {
 
         var leftColumn = document.getElementById("left-column");
@@ -356,6 +332,85 @@
         applyMotionParallax(parallax_dh, parallax_dv);
       }
       
+      const NUM_DIVS = 3;
+      const VT_GAP = 20;
+      const MAX_CENTER_STDDEV = 0;
+      const MEAN_HEIGHT = 150;
+      const MEAN_WIDTH = 150;
+      const MAX_SIZE_STDDEV = 0;
+      const DEFAULT_PROP_PRIORITY = null;
+
+      /**
+       * usage 
+       * let [BOTTOM,Z] = initDiv(redDiv,bottom, z);
+       * bottom = BOTTOM;
+       * z = Z
+       */
+      function initRedDiv(redDiv, prev_bottom, prev_z) {
+        
+        console.log(`id:${redDiv.id}`);
+        console.log(`position:${redDiv.style.position}`);
+        console.log(`classList:${redDiv.classList}`);
+        console.log(`prev_bottom:${prev_bottom}`);
+        console.log(`prev_z:${prev_z}`);
+
+        if (!prev_bottom)
+          prev_bottom = 0;
+                
+        var center_y = prev_bottom + VT_GAP + MEAN_HEIGHT/2;
+        center_y += getRandom(-MAX_CENTER_STDDEV, MAX_CENTER_STDDEV);
+        center_y = toFixedPoint(center_y,2);
+        var height = toFixedPoint(MEAN_HEIGHT + getRandom(-MAX_SIZE_STDDEV, MAX_SIZE_STDDEV),2);
+        var top = toFixedPoint(center_y - height/2,2);
+        var bottom = top + height; 
+
+        redDiv.style.height = height + "px";
+        redDiv.style.top = top + "px";
+        redDiv.style.bottom = bottom + "px";
+
+        console.log(`height:${redDiv.style.height}`);
+        console.log(`top:${redDiv.style.top}`); 
+        console.log(`bottom:${redDiv.style.bottom}`); 
+
+        var center_x = 0.0;
+        center_x += getRandom(-MAX_CENTER_STDDEV, MAX_CENTER_STDDEV);
+        center_x = toFixedPoint(center_x,2);
+        var width = toFixedPoint(MEAN_WIDTH + getRandom(-MAX_SIZE_STDDEV, MAX_SIZE_STDDEV),2);
+        var left = toFixedPoint(center_x - width/2,2);
+        var right = left + width;
+
+        redDiv.style.width = width + "px";
+        redDiv.style.left = left + "px";
+        redDiv.style.right = right + "px";
+
+        // console.log(`width:${redDiv.style.width}`); 
+        // console.log(`left:${redDiv.style.left}`);
+        // console.log(`right:${redDiv.style.right}`); 
+
+        // prevent paired z values
+        var z = getRandomInt(MIN_Z,MAX_Z);
+        if ( prev_z ) {
+          while ( Math.abs(z - prev_z) < 1) {
+            z = getRandomInt(MIN_Z,MAX_Z);
+          }
+        }
+        redDiv.style.zIndex = -z;
+        console.log(`zIndex:${redDiv.style.zIndex}`); 
+
+        // z-based variants
+        redDiv.innerHTML = `zIndex:${z}`;
+
+        var brightnessStr = getZbrightnessStr(z);
+        var blurStr = getZblurStr(z);
+
+        filtersStrs = `${brightnessStr} ${blurStr}`;
+        redDiv.style.filter = filtersStrs;
+
+        // console.log(`filter:${redDiv.style.filter}`); 
+
+        return [ bottom, z ];
+      }
+
       // Attach event listeners
       window.addEventListener("resize", handleResize);
       window.addEventListener("load", handleLoad);
@@ -366,8 +421,18 @@
 
       // Generate NUM_DIVS red divs with additional properties
       var canvas = document.getElementById("canvas");
+
+      var bottom = z = null;
       for (var id = 0; id < NUM_DIVS; id++) {
-        var redDiv = createRedDiv(id);
+        var redDiv = document.createElement("redDiv");
+        redDiv.setAttribute('id',id);
+        redDiv.classList.add('red-div');
+        redDiv.style.position = 'absolute';
+
+        let [BOTTOM,Z] = initRedDiv(redDiv, bottom, z);
+        bottom = BOTTOM;
+        z = Z;
+
         canvas.appendChild(redDiv);
       }
     </script>
