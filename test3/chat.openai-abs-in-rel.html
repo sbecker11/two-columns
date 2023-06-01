@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>absolute-in-relative</title>
+    <title>chat.openai-abs-in-rel</title>
     <style>
       html,
       body {
@@ -35,9 +35,9 @@
         top: 0;
         left: 0;
         width: 100%;
+        height: 100%;
         overflow-y: auto;
         overscroll-behavior: contain;
-        height: 2000px;
       }
 
       .red-div {
@@ -59,15 +59,15 @@
     </div>
 
     <script>
-      const NUM_DIVS = 14;
-      const MAX_OFFSET = 100;
-      const MARGIN_VT = -25;
-      const MEAN_HEIGHT = 150;
-      const MEAN_WIDTH = 150;
+      const NUM_DIVS = 50;
+      const MAX_OFFSET = 100
+      const MARGIN_VT = 10;
+      const MEAN_HEIGHT = 200;
+      const MEAN_WIDTH = 200;
 
       const MIN_Z = 1;
       const MAX_Z = 8;
-      const PARALLAX_EXAGGERATION_FACTOR = 0.50;
+      const PARALLAX_EXAGGERATION_FACTOR = 0.25;
 
       // returns a filter brightness string between 100% and 75%
       function getZbrightnessStr(z) {
@@ -79,7 +79,7 @@
 
       // returns a filter blur string
       function getZblurStr(z) {
-        var blur = z / 2;
+        var blur = (z - MIN_Z) / 4;
         return `blur(${blur}px)`;
       }
 
@@ -124,12 +124,13 @@
           redDiv.style.width = MEAN_WIDTH + "px";
           redDiv.style.left = `${getRandomInt(-MAX_OFFSET, MAX_OFFSET)}px`;
 
-          var z = getRandomInt(1, 8);
+          var z = getRandomInt(MIN_Z, MAX_Z);
 
           while (z === prevZIndex) {
             // Generate a new z if it's the same as the previous one
-            z = getRandomInt(1, 8);
+            z = getRandomInt(MIN_Z, MAX_Z);
           }
+          
 
           redDiv.style.zIndex = 10 - z; // Set the z-index of red divs
 
@@ -139,7 +140,11 @@
           filtersStrs = `${brightnessStr} ${blurStr}`;
           redDiv.style.filter = filtersStrs;
 
+          redDiv.innerHTML = `id:${id}<br/>z:${z}<br/>${blurStr}`;
+
           canvas.appendChild(redDiv);
+
+          prev_z = z;
         }
       }
 
