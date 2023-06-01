@@ -114,10 +114,10 @@
         return value;
       }
 
-      // adds a vertical stack of cardDivs.to #canvas
+      // adds a vertical stack of cardDivs to #canvas
       // each with random x,y offsets and random
       // z levels, and z-varied brightness and blur.
-      function createRedDivs() {
+      function createCardDivs() {
         const leftColumn = document.getElementById("left-column");
         const canvas = document.getElementById("canvas");
         var prevZIndex = null; // Track the previous z-index value
@@ -142,8 +142,9 @@
             z = getRandomInt(MIN_Z, MAX_Z);
           }
           
-          cardDiv.addEventListener("mouseenter", handleRedDivMouseEnter);
-          cardDiv.addEventListener("mouseleave", handleRedDivMouseLeave);
+          cardDiv.addEventListener("mouseenter", handleCardDivMouseEnter);
+          cardDiv.addEventListener("mouseleave", handleCardDivMouseLeave);
+          cardDiv.addEventListener("click", handleCardDivClick);
     
           cardDiv.style.zIndex = get_zindex_from_z(z);
           var filter_brightness_str = get_brightness_str_from_z(z);
@@ -201,11 +202,11 @@
         return canvas.offsetWidth / 2;
       }
       // return the horizontal center of the given cardDiv
-      function getRedDivHzCenter(cardDiv) {
+      function getCardDivHzCenter(cardDiv) {
         return cardDiv.offsetWidth / 2;
       }
 
-      // applies z-depth scaled parallax to all CardDivs
+      // applies z-depth scaled parallax to all cardDivs
       function applyMotionParallax(parallax_dh, parallax_dv) {
         // constant for the current view
         var canvasHzCtr =  getCanvasHzCtr();
@@ -221,7 +222,7 @@
           var z = 10 - cardDiv.style.zIndex;
 
           // canvas-relative cardDiv center
-          var canvas_dx = canvasHzCtr - getRedDivHzCenter(cardDiv);
+          var canvas_dx = canvasHzCtr - getCardDivHzCenter(cardDiv);
           var canvas_dy = 0;
 
           var zTranslateStr = getZTranslateStr(
@@ -238,7 +239,7 @@
         }
       }
 
-      // Function to handle transform cardDivs.according
+      // Function to handle transform cardDivs according
       // to current left-column position. Given null
       // when called from onload, in this case
       // left-column center as mouse location
@@ -262,11 +263,11 @@
         applyMotionParallax(parallax_dh, parallax_dv);
       }
 
-      // Function to handle transform cardDivs.according
+      // Function to handle transform cardDivs according
       // to current left-column position. Given null
       // when called from onload, in this case
       // left-column center as mouse location
-      function handleRedDivMouseEnter(event) {
+      function handleCardDivMouseEnter(event) {
         var targetCardDiv = event.target.closest(".card-div");
         if (targetCardDiv) {
           targetCardDiv.style.backgroundColor = CARD_DIV_FOCUS_BACKGROUND_COLOR;
@@ -279,7 +280,7 @@
         }
       }
 
-      function handleRedDivMouseLeave(event) {
+      function handleCardDivMouseLeave(event) {
         var targetCardDiv = event.target.closest(".card-div");
         if (targetCardDiv) {
           targetCardDiv.style.backgroundColor = CARD_DIV_DEFAULT_BACKGROUND_COLOR;
@@ -293,7 +294,31 @@
         }
       }
 
-      function renderRedDivsAtLeftColumnCenter() {
+      function handleCardDivClick(event) {
+        var targetCardDiv = event.target.closest(".card-div");
+        if (targetCardDiv) {
+          var dialog = document.createElement("div");
+          dialog.className = "dialog";
+          dialog.style.position = "absolute";
+          dialog.style.top = `${targetCardDiv.offsetTop + 20}px`;
+          dialog.style.left = `${targetCardDiv.offsetLeft + 20}px`;
+          dialog.style.background = "white";
+          dialog.style.padding = "10px";
+          dialog.style.border = "1px solid black";
+
+          var closeButton = document.createElement("button");
+          closeButton.innerText = "Close";
+          closeButton.addEventListener("click", function () {
+            dialog.remove();
+          });
+
+          dialog.appendChild(closeButton);
+
+          document.body.appendChild(dialog);
+        }
+      }
+
+      function renderCardDivsAtLeftColumnCenter() {
         const leftColumn = document.getElementById("left-column");
         const leftColumnCenter = getLeftColumnHzCtr();
 
@@ -306,7 +331,7 @@
           const translateStr = `${trans_dx}px ${trans_dy}px`;
 
           // if ( (10 - cardDiv.style.zIndex) == 5 )
-          //   console.log(`renderRedDivsAtLeftColumnCenter() canvasHzCtr:${getCanvasHzCtr()} leftColHzCtr:${getLeftColumnHzCtr()}  translateStr:${translateStr}`);
+          //   console.log(`renderCardDivsAtLeftColumnCenter() canvasHzCtr:${getCanvasHzCtr()} leftColHzCtr:${getLeftColumnHzCtr()}  translateStr:${translateStr}`);
           cardDiv.style.translate = translateStr;
         }
 
@@ -314,13 +339,13 @@
       }
 
       function handleWindowLoad() {
-        createRedDivs();
-        renderRedDivsAtLeftColumnCenter();
+        createCardDivs();
+        renderCardDivsAtLeftColumnCenter();
       }
 
       // Function to handle window resize event
       function handleWindowResize() {
-        // resize the left-column and the canvas since they don't doit themselves?
+        // resize the left-column and the canvas since they don't do it themselves?
         var windowWidth = window.innerWidth;
         var leftColumnWidth = windowWidth / 2;
 
@@ -328,7 +353,7 @@
           leftColumnWidth + "px";
         document.getElementById("canvas").style.width = leftColumnWidth + "px";
 
-        renderRedDivsAtLeftColumnCenter();
+        renderCardDivsAtLeftColumnCenter();
       }
 
       // Function to handle left-column scroll event
@@ -340,8 +365,9 @@
       window.addEventListener("resize", handleWindowResize);
       const cardDivs = document.getElementsByClassName("card-div");
       for (let i = 0; i < cardDivs.length; i++) {
-        cardDivs[i].addEventListener("mouseenter", handleRedDivMouseEnter);
-        cardDivs[i].addEventListener("mouseleave", handleRedDivMouseLeave);
+        cardDivs[i].addEventListener("mouseenter", handleCardDivMouseEnter);
+        cardDivs[i].addEventListener("mouseleave", handleCardDivMouseLeave);
+        cardDivs[i].addEventListener("click", handleCardDivClick);
       }
       leftColumn = document.getElementById("left-column");
       leftColumn.addEventListener("scroll", handleLeftColumnScroll);
