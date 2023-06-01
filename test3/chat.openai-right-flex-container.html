@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .left-column {
+      flex: 1;
+      background-color: blue;
+      overflow-y: auto;
+    }
+    
+    .right-column {
+      flex: 1;
+      background-color: lightblue;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .wrapper {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    
+    .flex-container {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .flex-item {
+      position: relative;
+      width: 100%;
+      height: 50px;
+      background-color: #ccc;
+      margin-bottom: 10px;
+    }
+    
+    .flex-item .close-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+    
+    .button-container {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 20px;
+      height: 100px;
+    }
+    
+    .button-container button {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .wrapper::-webkit-scrollbar {
+      width: 10px;
+    }
+    
+    .wrapper::-webkit-scrollbar-track {
+      background: lightgray;
+    }
+    
+    .wrapper::-webkit-scrollbar-thumb {
+      background: gray;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="left-column"></div>
+    <div class="right-column">
+      <div class="wrapper" id="wrapper">
+        <div class="flex-container" id="flexContainer"></div>
+      </div>
+      <div class="button-container">
+        <button onclick="addItem()">Add a Div</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let itemCount = 1;
+
+    function addItem() {
+      const flexContainer = document.getElementById('flexContainer');
+      const newItem = document.createElement('div');
+      newItem.classList.add('flex-item');
+      newItem.innerHTML = `Div ${itemCount}<span class="close-button" onclick="removeItem(this)">&times;</span>`;
+      flexContainer.appendChild(newItem);
+      itemCount++;
+    }
+    
+    function removeItem(element) {
+      const flexContainer = document.getElementById('flexContainer');
+      const item = element.parentNode;
+      flexContainer.removeChild(item);
+    }
+  </script>
+</body>
+</html>
