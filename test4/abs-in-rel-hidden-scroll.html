@@ -59,16 +59,8 @@
         <div id="canvas"></div>
       </div>
       <div id="right-column">
-        <p>leftColumn_centerX: <span id="leftColumn_centerX"></span></p>
-        <p>leftColumn_centerY: <span id="leftColumn_centerY"></span></p>
-        <p>leftColumn_offsetTop: <span id="leftColumn_offsetTop"></span></p>
-        <p>leftColumn_clientTop: <span id="leftColumn_clientTop"></span></p>
-        <p>leftColumn_clientHeight: <span id="leftColumn_clientHeight"></span></p>
-        <p>leftColumn_offsetHeight: <span id="leftColumn_offsetHeight"></span></p>
-        <p>leftColumn_scrollTop: <span id="leftColumn_scrollTop"></span></p>
-        <p>leftColumn_scrollHeight: <span id="leftColumn_scrollHeight"></span></p>
-        <p>leftColumn_wheel_clientX: <span id="leftColumn_wheel_clientX"></span></p>
-        <p>leftColumn_wheel_clientY: <span id="leftColumn_wheel_clientY"></span></p>
+        <p>leftColumn_mouse_dh: <span id="leftColumn_mouse_dh"></span></p>
+        <p>leftColumn_mouse_dv: <span id="leftColumn_mouse_dv"></span></p>
         <p>leftColumn_wheel_dh: <span id="leftColumn_wheel_dh"></span></p>
         <p>leftColumn_wheel_dv: <span id="leftColumn_wheel_dv"></span></p>
       </div>
@@ -88,44 +80,10 @@
       const CARD_DIV_FOCUS_BACKGROUND_COLOR = "yellow";
       const CARD_DIV_DEFAULT_BACKGROUND_COLOR = "red";
 
-      const leftColumn_centerX = document.getElementById("leftColumn_centerX");
-      const leftColumn_centerY = document.getElementById("leftColumn_centerY");
-      const leftColumn_offsetTop = document.getElementById(
-        "leftColumn_offsetTop"
-      );
-      const leftColumn_clientTop = document.getElementById(
-        "leftColumn_clientTop"
-      );
-      const leftColumn_clientHeight = document.getElementById(
-        "leftColumn_clientHeight"
-      );
-      const leftColumn_offsetHeight = document.getElementById(
-        "leftColumn_offsetHeight"
-      );
-      const leftColumn_scrollTop = document.getElementById(
-        "leftColumn_scrollTop"
-      );
-      const leftColumn_scrollHeight = document.getElementById(
-        "leftColumn_scrollHeight"
-      );
-      const leftColumn_wheel_clientX = document.getElementById("leftColumn_wheel_clientX");
-      const leftColumn_wheel_clientY = document.getElementById("leftColumn_wheel_clientY");
+      const leftColumn_mouse_dh = document.getElementById("leftColumn_mouse_dh");
+      const leftColumn_mouse_dv = document.getElementById("leftColumn_mouse_dv");
       const leftColumn_wheel_dh = document.getElementById("leftColumn_wheel_dh");
       const leftColumn_wheel_dv = document.getElementById("leftColumn_wheel_dv");
-
-      // Function that reports leftColumn-center relative mouse positions
-      function reportLeftColumnAttributes() {
-        const leftColumn = document.getElementById("left-column");
-        const leftColumnRect = leftColumn.getBoundingClientRect();
-        leftColumn_centerX.textContent = `${leftColumnRect.width / 2}`;
-        leftColumn_centerY.textContent = `${leftColumnRect.height / 2}`;
-        leftColumn_offsetTop.textContent = leftColumn.offsetTop;
-        leftColumn_clientTop.textContent = leftColumn.clientTop;
-        leftColumn_clientHeight.textContent = leftColumn.clientHeight;
-        leftColumn_offsetHeight.textContent = leftColumn.offsetHeight;
-        leftColumn_scrollTop.textContent = leftColumn.scrollTop;
-        leftColumn_scrollHeight.textContent = leftColumn.scrollHeight;
-      }
 
       function get_zindex_from_z(z) {
         return 10 - z;
@@ -309,17 +267,36 @@
         if (event) {
           mouseX = event.clientX;
           mouseY = event.clientY;
-          // does this fire when leftColumn is scrolling?
-          // console.log(`mouse ${mouseX},${mouseY}`);
         }
 
         var parallax_dh = mouseX - centerDivX;
         var parallax_dv = mouseY - centerDivY;
 
+        leftColumn_mouse_dh.textContent = `${parallax_dh}`;
+        leftColumn_mouse_dv.textContent = `${parallax_dv}`;
+        
         applyMotionParallax(parallax_dh, parallax_dv);
-
-        reportLeftColumnAttributes();
       }
+
+      // calculates dh,dv parallax when
+      // mouse wheel is moving
+      // leftColumn_wheel_dh ==  leftColumn_mouse_dh
+      // leftColumn_wheel_dv ==  leftColumn_mouse_dv
+      // when mouse wheel is scrolling
+      function handleLeftColumnWheel(wheelEvent) {
+        const centerX = getLeftColumnHzCtr();
+        const centerY = getLeftColumnVtCtr();
+        const mouseX = wheelEvent.clientX;
+        const mouseY = wheelEvent.clientY;
+
+        const dh = mouseX - centerX;
+        const dv = mouseY - centerY;
+
+        leftColumn_wheel_dh.textContent = `${dh}`;
+        leftColumn_wheel_dv.textContent = `${dv}`;
+
+      }
+
 
       // Function to handle transform cardDivs according
       // to current left-column position. Given null
@@ -400,7 +377,6 @@
       function handleWindowLoad() {
         createCardDivs();
         renderCardDivsAtLeftColumnCenter();
-        reportLeftColumnAttributes();
       }
 
       // Function to handle window resize event
@@ -414,26 +390,6 @@
         document.getElementById("canvas").style.width = leftColumnWidth + "px";
 
         renderCardDivsAtLeftColumnCenter();
-        reportLeftColumnAttributes();
-      }
-
-      function handleLeftColumnWheel(wheelEvent) {
-        const centerX = getLeftColumnHzCtr();
-        const centerY = getLeftColumnVtCtr();
-        const mouseX = wheelEvent.clientX;
-        const mouseY = wheelEvent.clientY;
-
-        leftColumn_centerX.textContent = `${centerX}`;
-        leftColumn_centerY.textContent = `${centerY}`;
-        leftColumn_wheel_clientX.textContent = `${mouseX}`;
-        leftColumn_wheel_clientY.textContent = `${mouseY}`;
-
-        const dh = mouseX - centerX;
-        const dv = mouseY - centerY;
-
-        leftColumn_wheel_dh.textContent = `${dx}`;
-        leftColumn_wheel_dv.textContent = `${dv}`;
-
       }
 
       // Attach event listeners
