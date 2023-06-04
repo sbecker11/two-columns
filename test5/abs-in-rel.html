@@ -29,9 +29,8 @@
         overscroll-behavior: contain;
         -ms-overflow-style: none; /* Hide scrollbar for IE and Edge */
         scrollbar-width: none; /* Hide scrollbar for Firefox */
-        background-color: blue;
+        background-color: black;
         width: 200px;
-        border: 1px dashed black;
       }
 
       #left-column::-webkit-scrollbar {
@@ -41,6 +40,31 @@
       #canvas {
         position: relative;
         height: fit-content;
+      }
+
+      #years-div-box {
+        position: absolute;
+        z-index: 0;
+        right: 0; /* Align to the right */
+        width: 125px; /* Set the width */
+        top: 0; /* Align to the top */
+        bottom: 0; /* Align to the bottom */
+      }
+
+      .year-div {
+        position: absolute;
+        font-family: 'Roboto', sans-serif;
+        font-weight: bold;
+        font-size: 50px;
+        color: #222222;
+        text-align: center;
+        border: px solid white;
+      }
+
+      .year-box {
+        position: absolute;
+        width: 0px;
+        border: 2px solid #222222;
       }
 
       .card-div {
@@ -56,7 +80,9 @@
   <body>
     <div id="container">
       <div id="left-column">
-        <div id="canvas"></div>
+        <div id="canvas">
+          <div id="years-div-box"></div>
+        </div>
       </div>
       <div id="right-column">
         <p>leftColumn_mouse_dh: <span id="leftColumn_mouse_dh"></span></p>
@@ -67,8 +93,8 @@
     </div>
 
     <script>
-      const NUM_DIVS = 50;
-      const MAX_OFFSET = 50;
+      const NUM_DIVS = 80;
+      const MAX_OFFSET = 200;
       const MARGIN_VT = 5;
       const MEAN_HEIGHT = 75;
       const MEAN_WIDTH = 100;
@@ -125,6 +151,44 @@
       function toFixedPoint(value, precision) {
         if (value) value = parseInt(value.toFixed(precision));
         return value;
+      }
+
+      function createYearDivs() {
+        const yearsDivBox = document.getElementById("years-div-box");
+        var yearDivHeightPx = 65;
+        var yearBoxHeightPx = 100;
+        var yearBoxLeftPx = 114/2;
+        
+        var yearBoxTopPx = 0;
+        var yearDivTopPx = yearBoxTopPx + yearBoxHeightPx;
+
+        var yearBox = document.createElement("div");
+        yearBox.className = "year-box";
+        yearBox.style.top = `${yearBoxTopPx}px`;
+        yearBox.style.left = `${yearBoxLeftPx}px`;
+        yearBox.style.height = `${yearBoxHeightPx}px`;
+        yearsDivBox.appendChild(yearBox);
+
+        var jumpPx = yearDivHeightPx + yearBoxHeightPx;
+  
+        for (let year = 2023; year >= 1984; year--) {
+
+          var yearDiv = document.createElement("div");
+          yearDiv.className = "year-div";
+          yearDiv.textContent = year;
+          yearDiv.style.top = `${yearDivTopPx}px`;
+          yearsDivBox.appendChild(yearDiv);
+
+          var yearBox = document.createElement("div");
+          yearBox.className = "year-box";
+          yearBox.style.top = `${yearBoxTopPx}px`;
+          yearBox.style.left = `${yearBoxLeftPx}px`;
+          yearBox.style.height = `${yearBoxHeightPx}px`;
+          yearsDivBox.appendChild(yearBox);
+  
+          yearDivTopPx += jumpPx;
+          yearBoxTopPx += jumpPx;
+        }
       }
 
       // adds a vertical stack of cardDivs to #canvas
@@ -375,6 +439,7 @@
       }
 
       function handleWindowLoad() {
+        createYearDivs();
         createCardDivs();
         renderCardDivsAtLeftColumnCenter();
       }
