@@ -67,6 +67,15 @@
         border: 2px solid #222222;
       }
 
+      .bizcard-div {
+        width: 40px;
+        height: 800px;
+        background: purple;
+        position: absolute;
+        top: 0;
+        border: 5px solid white; /* border width is scalable */
+      }
+
       .card-div {
         width: 20px;
         height: 20px;
@@ -89,39 +98,51 @@
         <p>leftColumn_mouse_dv: <span id="leftColumn_mouse_dv"></span></p>
         <p>leftColumn_wheel_dh: <span id="leftColumn_wheel_dh"></span></p>
         <p>leftColumn_wheel_dv: <span id="leftColumn_wheel_dv"></span></p>
+        <p id="z_histo_element"></p>
       </div>
     </div>
 
     <script>
-      const NUM_DIVS = 80;
-      const MAX_OFFSET = 200;
-      const MARGIN_VT = 5;
-      const MEAN_HEIGHT = 75;
-      const MEAN_WIDTH = 100;
+      const ALL_CARDS_MAX_Z = 11;
+      const BIZCARD_MAX_Z = 11;
+      const BIZCARD_MIN_Z = 9;
+      const CARD_MAX_Z = 8;
+      const CARD_MIN_Z = 1;
+      const ALL_CARDS_MIN_Z = 1;
 
-      const MIN_Z = 1;
-      const MAX_Z = 8;
-      const PARALLAX_EXAGGERATION_FACTOR = 0.25;
+      const NUM_BIZ_CARDS = 26;
+      const MEAN_BIZCARD_HEIGHT = 250;
+      const MEAN_BIZCARD_WIDTH = 150;
 
-      const CARD_DIV_FOCUS_BACKGROUND_COLOR = "yellow";
-      const CARD_DIV_DEFAULT_BACKGROUND_COLOR = "red";
+      const NUM_CARDS = 80;
+      const MAX_CARD_OFFSET = 200;
+      const CARD_MARGIN_VT = 5;
+      const MEAN_CARD_HEIGHT = 75;
+      const MEAN_CARD_WIDTH = 100;
+
+      const PARALLAX_HZ_EXAGGERATION_FACTOR = 0.25;
+      const PARALLAX_VT_EXAGGERATION_FACTOR = 0.50;
+
+      const CARD_FOCUS_BACKGROUND_COLOR = "yellow";
+      const CARD_DEFAULT_BACKGROUND_COLOR = "red";
 
       const leftColumn_mouse_dh = document.getElementById("leftColumn_mouse_dh");
       const leftColumn_mouse_dv = document.getElementById("leftColumn_mouse_dv");
       const leftColumn_wheel_dh = document.getElementById("leftColumn_wheel_dh");
       const leftColumn_wheel_dv = document.getElementById("leftColumn_wheel_dv");
-
-      function get_zindex_from_z(z) {
-        return 10 - z;
+      const z_histo_element = document.getElementById("z_histo_element");
+      
+      function get_zindexStr_from_z(z) {
+        return `${ALL_CARDS_MAX_Z - z}`;
       }
 
-      function get_z_from_zindex(zindex) {
-        return 10 - zindex;
+      function get_z_from_zindexStr(zindex) {
+        return ALL_CARDS_MAX_Z - parseInt(zindex);
       }
 
       // returns a filter brightness string between 100% and 75%
       function get_brightness_str_from_z(z) {
-        var bright = linearInterp(z, MIN_Z, 1.0, MAX_Z, 0.75);
+        var bright = linearInterp(z, CARD_MIN_Z, 1.0, CARD_MAX_Z, 0.75);
         bright = Math.round(bright * 100) / 100;
         var perc = `${100 * bright}%`;
         return `brightness(${perc})`;
@@ -129,13 +150,13 @@
 
       // returns a filter blur string
       function get_blur_str_from_z(z) {
-        var blur = (z - MIN_Z) / 4;
+        var blur = (z - CARD_MIN_Z) / 4;
         return `blur(${blur}px)`;
       }
 
-      // returns s floating point number
+      // returns a z-relative parallax scale factor
       function getZscale(z) {
-        return (5 * 1.0) / z;
+        return (1+ALL_CARDS_MAX_Z - z) / (ALL_CARDS_MAX_Z+1.0);
       }
 
       // return the y value given x
@@ -149,7 +170,7 @@
       // returns given number with precision-digit
       // precision
       function toFixedPoint(value, precision) {
-        if (value) value = parseInt(value.toFixed(precision));
+        if (value) value = parseFloat(value.toFixed(precision));
         return value;
       }
 
@@ -191,48 +212,93 @@
         }
       }
 
+      function createBizCardDivs() {
+        const leftColumn = document.getElementById("left-column");
+        const canvas = document.getElementById("canvas");
+        var min_id_inclusive = 0;
+        var max_id_exclusive = NUM_BIZ_CARDS;
+        var top = 0;
+
+        for ( let id=min_id_inclusive; id<max_id_exclusive; id++ ) {
+          const bizcardDiv = document.createElement("div");
+          bizcardDiv.className = "bizcard-div";
+          bizcardDiv.style.top = top + 'px';
+          var height = MEAN_BIZCARD_HEIGHT;
+          bizcardDiv.style.height = `${height}px`;
+          bizcardDiv.style.left = '0 px';
+          var width = MEAN_BIZCARD_WIDTH;
+          bizcardDiv.style.width = `${width}px`;
+          var z = getRandomInt(BIZCARD_MIN_Z, BIZCARD_MAX_Z);
+          var zindexStr = get_zindexStr_from_z(z);
+          bizcardDiv.style.zIndex = zindexStr;
+          var zscale = getZscale(z).toFixed(2);
+          bizcardDiv.innerHTML = `id:${id}<br/>z:${z}<br/>zindexStr:${zindexStr}<br/>zscale:${zscale}<br>`;
+          canvas.appendChild(bizcardDiv);
+          top += MEAN_BIZCARD_HEIGHT;
+        }
+
+      }
+
       // adds a vertical stack of cardDivs to #canvas
       // each with random x,y offsets and random
       // z levels, and z-varied brightness and blur.
       function createCardDivs() {
+        var z_histo = new Array(CARD_MAX_Z-CARD_MIN_Z+1).fill(0);
         const leftColumn = document.getElementById("left-column");
         const canvas = document.getElementById("canvas");
         var prevZIndex = null; // Track the previous z-index value
-        for (let id = 0; id < NUM_DIVS; id++) {
+        var min_id_inclusive = NUM_BIZ_CARDS;
+        var max_id_exclusive = NUM_BIZ_CARDS + NUM_CARDS;
+        for (let id = min_id_inclusive; id < max_id_exclusive; id++) {
           const cardDiv = document.createElement("div");
           cardDiv.className = "card-div";
 
-          cardDiv.style.height = MEAN_HEIGHT + "px";
-          const verticalOffset = getRandomInt(-MAX_OFFSET, MAX_OFFSET);
-          var verticalDistance = MEAN_HEIGHT + MARGIN_VT;
+          cardDiv.style.height = MEAN_CARD_HEIGHT + "px";
+          const verticalOffset = getRandomInt(-MAX_CARD_OFFSET, MAX_CARD_OFFSET);
+          var verticalDistance = MEAN_CARD_HEIGHT + CARD_MARGIN_VT;
           cardDiv.style.top = `${
-            MEAN_HEIGHT / 2 + id * verticalDistance + verticalOffset
+            MEAN_CARD_HEIGHT / 2 + (id-min_id_inclusive) * verticalDistance + verticalOffset
           }px`;
 
-          cardDiv.style.width = MEAN_WIDTH + "px";
-          cardDiv.style.left = `${getRandomInt(-MAX_OFFSET, MAX_OFFSET)}px`;
+          cardDiv.style.width = MEAN_CARD_WIDTH + "px";
+          cardDiv.style.left = `${getRandomInt(-MAX_CARD_OFFSET, MAX_CARD_OFFSET)}px`;
 
-          var z = getRandomInt(MIN_Z, MAX_Z);
-
+          var z = getRandomInt(CARD_MIN_Z, CARD_MAX_Z);
           while (z === prevZIndex) {
             // Generate a new z if it's the same as the previous one
-            z = getRandomInt(MIN_Z, MAX_Z);
+            z = getRandomInt(CARD_MIN_Z, CARD_MAX_Z);
           }
+
+          z_histo[z - CARD_MIN_Z]++;
 
           cardDiv.addEventListener("mouseenter", handleCardDivMouseEnter);
           cardDiv.addEventListener("mouseleave", handleCardDivMouseLeave);
           cardDiv.addEventListener("click", handleCardDivClick);
 
-          cardDiv.style.zIndex = get_zindex_from_z(z);
+          var zindexStr = get_zindexStr_from_z(z);
+          cardDiv.style.zIndex = zindexStr;
           var filter_brightness_str = get_brightness_str_from_z(z);
           var filter_blur_str = get_blur_str_from_z(z);
           filter_strs = `${filter_brightness_str} ${filter_blur_str}`;
           cardDiv.style.filter = filter_strs;
-          cardDiv.innerHTML = `id:${id}<br/>z:${z}<br/>${filter_blur_str}`;
+          cardDiv.innerHTML = `id:${id}<br/>z:${z}<br/>zindexStr:${zindexStr}<br/>${filter_blur_str}`;
           canvas.appendChild(cardDiv);
 
           prev_z = z;
+
+          if (z==CARD_MAX_Z) {
+            cardDiv.style.backgroundColor = "purple";
+            console.log(`cardDiv[${id}] initialized to purple`);
+          }
         }
+        show_z_histo(z_histo);
+      }
+
+      function show_z_histo(z_histo) {
+        var lines = "";
+        for( var z=0; z < z_histo.length; z++ )
+          lines += `z[${z+CARD_MIN_Z}] => ${z_histo[z]}<br/>`;
+        z_histo_element.innerHTML = lines;
       }
 
       /**
@@ -246,24 +312,19 @@
        * @param {float}  dh           the horizontal parallax offset value
        * @param {float}  dv           the vertical parallax offet value
        * @param {int}    z        the random Z depth assigned to every cardDiv
-       *                              with an integer value between MIN_Z and MAX_Z
+       *                              with an integer value between CARD_MIN_Z and CARD_MAX_Z
        * @param {float}  canvas_dx    the x value used to convert cardDiv.x to canvas-relative position
        * @param {float}  canvas_dy    the y value used to convert cardDiv.y canvas-relative position
        *
        * @return {str} Return a string with format "12.02px -156.79px"
        */
       function getZTranslateStr(dh, dv, z, canvas_dx, canvas_dy) {
-        //if ( z == 5 )
-        //  console.log(`a-getZTranslateStr: dh:${dh} dv:${dv} z:${z} dx:${canvas_dx} dy:${canvas_dy}`);
-
         zScale = getZscale(z);
 
         // by definition, divs have zero mean hzCtrs so canvas translation is required
         dx = toFixedPoint(dh * zScale + canvas_dx, 2);
         dy = toFixedPoint(dv * zScale + canvas_dy, 2);
         zTranslateStr = `${dx}px ${dy}px`;
-        //if ( z == 5 )
-        //  console.log(`b-getZTranslateStr: dx:${dx} dy:${dy} dh:${dh} dv:${dv} z:${z} canvas ${canvas_dx},${canvas_dy}`);
 
         return zTranslateStr;
       }
@@ -294,23 +355,24 @@
         var canvasHzCtr = getCanvasHzCtr();
 
         // constants for this parallax
-        var dh = parallax_dh * PARALLAX_EXAGGERATION_FACTOR;
-        var dv = parallax_dv * PARALLAX_EXAGGERATION_FACTOR;
+        var dh = parallax_dh * PARALLAX_HZ_EXAGGERATION_FACTOR;
+        var dv = parallax_dv * PARALLAX_VT_EXAGGERATION_FACTOR;
 
-        // compute translations for each cardDiv
-        var cardDivs = canvas.getElementsByClassName("card-div");
-        for (var i = 0; i < cardDivs.length; i++) {
-          var cardDiv = cardDivs[i];
-          var z = 10 - cardDiv.style.zIndex;
+        // compute translations for all bizcardDivs and all cardDivs
+        var allDivs = [];
+        allDivs = Array.prototype.concat.apply(allDivs, canvas.getElementsByClassName("bizcard-div"));
+        allDivs = Array.prototype.concat.apply(allDivs, canvas.getElementsByClassName("card-div"));
+        for (var i = 0; i < allDivs.length; i++) {
+          var cardDiv = allDivs[i];
+          var zIndexStr = cardDiv.style.zIndex;
+          var z = get_z_from_zindexStr(zIndexStr);
 
           // canvas-relative cardDiv center
           var canvas_dx = canvasHzCtr - getCardDivHzCenter(cardDiv);
           var canvas_dy = 0;
 
           var zTranslateStr = getZTranslateStr(dh, dv, z, canvas_dx, canvas_dy);
-
-          // if ( z == 5 )
-          //   console.log(`applyMotionParallax() canvasHzCtr:${getCanvasHzCtr()} leftColHzCtr:${getLeftColumnHzCtr()} zTranslateStr:${zTranslateStr}`);
+          
           cardDiv.style.translate = zTranslateStr;
         }
       }
@@ -333,8 +395,8 @@
           mouseY = event.clientY;
         }
 
-        var parallax_dh = mouseX - centerDivX;
-        var parallax_dv = mouseY - centerDivY;
+        var parallax_dh = -(mouseX - centerDivX);
+        var parallax_dv = -(mouseY - centerDivY);
 
         leftColumn_mouse_dh.textContent = `${parallax_dh}`;
         leftColumn_mouse_dv.textContent = `${parallax_dv}`;
@@ -353,12 +415,13 @@
         const mouseX = wheelEvent.clientX;
         const mouseY = wheelEvent.clientY;
 
-        const dh = mouseX - centerX;
-        const dv = mouseY - centerY;
+        const parallax_dh = -(mouseX - centerX);
+        const parallax_dv = -(mouseY - centerY);
 
-        leftColumn_wheel_dh.textContent = `${dh}`;
-        leftColumn_wheel_dv.textContent = `${dv}`;
+        leftColumn_wheel_dh.textContent = `${parallax_dh}`;
+        leftColumn_wheel_dv.textContent = `${parallax_dv}`;
 
+        applyMotionParallax(parallax_dh, parallax_dv);
       }
 
 
@@ -369,9 +432,9 @@
       function handleCardDivMouseEnter(event) {
         var targetCardDiv = event.target.closest(".card-div");
         if (targetCardDiv) {
-          targetCardDiv.style.backgroundColor = CARD_DIV_FOCUS_BACKGROUND_COLOR;
+          targetCardDiv.style.backgroundColor = CARD_FOCUS_BACKGROUND_COLOR;
 
-          var z = MIN_Z;
+          var z = CARD_MIN_Z;
 
           var filter_brightness_str = get_brightness_str_from_z(z);
           var filter_blur_str = get_blur_str_from_z(z);
@@ -383,10 +446,10 @@
         var targetCardDiv = event.target.closest(".card-div");
         if (targetCardDiv) {
           targetCardDiv.style.backgroundColor =
-            CARD_DIV_DEFAULT_BACKGROUND_COLOR;
+            CARD_DEFAULT_BACKGROUND_COLOR;
 
-          var zindex = parseInt(targetCardDiv.style.zIndex);
-          var z = get_z_from_zindex(zindex);
+          var zIndexStr = targetCardDiv.style.zIndex;
+          var z = get_z_from_zindexStr(zIndexStr);
 
           var filter_brightness_str = get_brightness_str_from_z(z);
           var filter_blur_str = get_blur_str_from_z(z);
@@ -430,8 +493,6 @@
           const trans_dy = 0;
           const translateStr = `${trans_dx}px ${trans_dy}px`;
 
-          // if ( (10 - cardDiv.style.zIndex) == 5 )
-          //   console.log(`renderCardDivsAtLeftColumnCenter() canvasHzCtr:${getCanvasHzCtr()} leftColHzCtr:${getLeftColumnHzCtr()}  translateStr:${translateStr}`);
           cardDiv.style.translate = translateStr;
         }
 
@@ -440,6 +501,7 @@
 
       function handleWindowLoad() {
         createYearDivs();
+        createBizCardDivs();
         createCardDivs();
         renderCardDivsAtLeftColumnCenter();
       }
