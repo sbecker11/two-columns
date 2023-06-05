@@ -53,7 +53,7 @@
 
       .year-div {
         position: absolute;
-        font-family: 'Roboto', sans-serif;
+        font-family: "Roboto", sans-serif;
         font-weight: bold;
         font-size: 50px;
         color: #222222;
@@ -121,17 +121,25 @@
       const MEAN_CARD_WIDTH = 100;
 
       const PARALLAX_HZ_EXAGGERATION_FACTOR = 0.25;
-      const PARALLAX_VT_EXAGGERATION_FACTOR = 0.50;
+      const PARALLAX_VT_EXAGGERATION_FACTOR = 0.5;
 
       const CARD_FOCUS_BACKGROUND_COLOR = "yellow";
       const CARD_DEFAULT_BACKGROUND_COLOR = "red";
 
-      const leftColumn_mouse_dh = document.getElementById("leftColumn_mouse_dh");
-      const leftColumn_mouse_dv = document.getElementById("leftColumn_mouse_dv");
-      const leftColumn_wheel_dh = document.getElementById("leftColumn_wheel_dh");
-      const leftColumn_wheel_dv = document.getElementById("leftColumn_wheel_dv");
+      const leftColumn_mouse_dh = document.getElementById(
+        "leftColumn_mouse_dh"
+      );
+      const leftColumn_mouse_dv = document.getElementById(
+        "leftColumn_mouse_dv"
+      );
+      const leftColumn_wheel_dh = document.getElementById(
+        "leftColumn_wheel_dh"
+      );
+      const leftColumn_wheel_dv = document.getElementById(
+        "leftColumn_wheel_dv"
+      );
       const z_histo_element = document.getElementById("z_histo_element");
-      
+
       function get_zindexStr_from_z(z) {
         return `${ALL_CARDS_MAX_Z - z}`;
       }
@@ -156,7 +164,7 @@
 
       // returns a z-relative parallax scale factor
       function getZscale(z) {
-        return (1+ALL_CARDS_MAX_Z - z) / (ALL_CARDS_MAX_Z+1.0);
+        return (1 + ALL_CARDS_MAX_Z - z) / (ALL_CARDS_MAX_Z + 1.0);
       }
 
       // return the y value given x
@@ -178,8 +186,8 @@
         const yearsDivBox = document.getElementById("years-div-box");
         var yearDivHeightPx = 65;
         var yearBoxHeightPx = 100;
-        var yearBoxLeftPx = 114/2;
-        
+        var yearBoxLeftPx = 114 / 2;
+
         var yearBoxTopPx = 0;
         var yearDivTopPx = yearBoxTopPx + yearBoxHeightPx;
 
@@ -191,9 +199,8 @@
         yearsDivBox.appendChild(yearBox);
 
         var jumpPx = yearDivHeightPx + yearBoxHeightPx;
-  
-        for (let year = 2023; year >= 1984; year--) {
 
+        for (let year = 2023; year >= 1984; year--) {
           var yearDiv = document.createElement("div");
           yearDiv.className = "year-div";
           yearDiv.textContent = year;
@@ -206,7 +213,7 @@
           yearBox.style.left = `${yearBoxLeftPx}px`;
           yearBox.style.height = `${yearBoxHeightPx}px`;
           yearsDivBox.appendChild(yearBox);
-  
+
           yearDivTopPx += jumpPx;
           yearBoxTopPx += jumpPx;
         }
@@ -218,14 +225,13 @@
         var min_id_inclusive = 0;
         var max_id_exclusive = NUM_BIZ_CARDS;
         var top = 0;
-
-        for ( let id=min_id_inclusive; id<max_id_exclusive; id++ ) {
+        for (let id = min_id_inclusive; id < max_id_exclusive; id++) {
           const bizcardDiv = document.createElement("div");
           bizcardDiv.className = "bizcard-div";
-          bizcardDiv.style.top = top + 'px';
+          bizcardDiv.style.top = top + "px";
           var height = MEAN_BIZCARD_HEIGHT;
           bizcardDiv.style.height = `${height}px`;
-          bizcardDiv.style.left = '0 px';
+          bizcardDiv.style.left = "0 px";
           var width = MEAN_BIZCARD_WIDTH;
           bizcardDiv.style.width = `${width}px`;
           var z = getRandomInt(BIZCARD_MIN_Z, BIZCARD_MAX_Z);
@@ -236,14 +242,13 @@
           canvas.appendChild(bizcardDiv);
           top += MEAN_BIZCARD_HEIGHT;
         }
-
       }
 
       // adds a vertical stack of cardDivs to #canvas
       // each with random x,y offsets and random
       // z levels, and z-varied brightness and blur.
       function createCardDivs() {
-        var z_histo = new Array(CARD_MAX_Z-CARD_MIN_Z+1).fill(0);
+        var z_histo = new Array(CARD_MAX_Z - CARD_MIN_Z + 1).fill(0);
         const leftColumn = document.getElementById("left-column");
         const canvas = document.getElementById("canvas");
         var prevZIndex = null; // Track the previous z-index value
@@ -254,14 +259,22 @@
           cardDiv.className = "card-div";
 
           cardDiv.style.height = MEAN_CARD_HEIGHT + "px";
-          const verticalOffset = getRandomInt(-MAX_CARD_OFFSET, MAX_CARD_OFFSET);
+          const verticalOffset = getRandomInt(
+            -MAX_CARD_OFFSET,
+            MAX_CARD_OFFSET
+          );
           var verticalDistance = MEAN_CARD_HEIGHT + CARD_MARGIN_VT;
           cardDiv.style.top = `${
-            MEAN_CARD_HEIGHT / 2 + (id-min_id_inclusive) * verticalDistance + verticalOffset
+            MEAN_CARD_HEIGHT / 2 +
+            (id - min_id_inclusive) * verticalDistance +
+            verticalOffset
           }px`;
 
           cardDiv.style.width = MEAN_CARD_WIDTH + "px";
-          cardDiv.style.left = `${getRandomInt(-MAX_CARD_OFFSET, MAX_CARD_OFFSET)}px`;
+          cardDiv.style.left = `${getRandomInt(
+            -MAX_CARD_OFFSET,
+            MAX_CARD_OFFSET
+          )}px`;
 
           var z = getRandomInt(CARD_MIN_Z, CARD_MAX_Z);
           while (z === prevZIndex) {
@@ -286,7 +299,7 @@
 
           prev_z = z;
 
-          if (z==CARD_MAX_Z) {
+          if (z == CARD_MAX_Z) {
             cardDiv.style.backgroundColor = "purple";
             console.log(`cardDiv[${id}] initialized to purple`);
           }
@@ -296,8 +309,8 @@
 
       function show_z_histo(z_histo) {
         var lines = "";
-        for( var z=0; z < z_histo.length; z++ )
-          lines += `z[${z+CARD_MIN_Z}] => ${z_histo[z]}<br/>`;
+        for (var z = 0; z < z_histo.length; z++)
+          lines += `z[${z + CARD_MIN_Z}] => ${z_histo[z]}<br/>`;
         z_histo_element.innerHTML = lines;
       }
 
@@ -360,8 +373,14 @@
 
         // compute translations for all bizcardDivs and all cardDivs
         var allDivs = [];
-        allDivs = Array.prototype.concat.apply(allDivs, canvas.getElementsByClassName("bizcard-div"));
-        allDivs = Array.prototype.concat.apply(allDivs, canvas.getElementsByClassName("card-div"));
+        allDivs = Array.prototype.concat.apply(
+          allDivs,
+          canvas.getElementsByClassName("bizcard-div")
+        );
+        allDivs = Array.prototype.concat.apply(
+          allDivs,
+          canvas.getElementsByClassName("card-div")
+        );
         for (var i = 0; i < allDivs.length; i++) {
           var cardDiv = allDivs[i];
           var zIndexStr = cardDiv.style.zIndex;
@@ -372,7 +391,7 @@
           var canvas_dy = 0;
 
           var zTranslateStr = getZTranslateStr(dh, dv, z, canvas_dx, canvas_dy);
-          
+
           cardDiv.style.translate = zTranslateStr;
         }
       }
@@ -400,7 +419,7 @@
 
         leftColumn_mouse_dh.textContent = `${parallax_dh}`;
         leftColumn_mouse_dv.textContent = `${parallax_dv}`;
-        
+
         applyMotionParallax(parallax_dh, parallax_dv);
       }
 
@@ -424,11 +443,9 @@
         applyMotionParallax(parallax_dh, parallax_dv);
       }
 
-
-      // Function to handle transform cardDivs according
-      // to current left-column position. Given null
+      // handle onMouseEnter event for any cardDiv
       // when called from onload, in this case
-      // left-column center as mouse location
+      // mouse location is set to be left-column center 
       function handleCardDivMouseEnter(event) {
         var targetCardDiv = event.target.closest(".card-div");
         if (targetCardDiv) {
@@ -442,11 +459,11 @@
         }
       }
 
+      // handle onMouseLeave event for any cardDiv
       function handleCardDivMouseLeave(event) {
         var targetCardDiv = event.target.closest(".card-div");
         if (targetCardDiv) {
-          targetCardDiv.style.backgroundColor =
-            CARD_DEFAULT_BACKGROUND_COLOR;
+          targetCardDiv.style.backgroundColor = CARD_DEFAULT_BACKGROUND_COLOR;
 
           var zIndexStr = targetCardDiv.style.zIndex;
           var z = get_z_from_zindexStr(zIndexStr);
@@ -457,6 +474,7 @@
         }
       }
 
+      // handle onclick event for any cardDiv
       function handleCardDivClick(event) {
         var targetCardDiv = event.target.closest(".card-div");
         if (targetCardDiv) {
@@ -481,6 +499,25 @@
         }
       }
 
+      function renderBizcardDivsAtLeftColumnCenter() {
+        const leftColumn = document.getElementById("left-column");
+        const leftColumnCenter = getLeftColumnHzCtr();
+
+        const bizcardDivs = document.getElementsByClassName("bizcard-div");
+        for (let i = 0; i < bizcardDivs.length; i++) {
+          const bizcardDiv = bizcardDivs[i];
+          const redDivWidth = bizcardDiv.offsetWidth;
+          const trans_dx = leftColumnCenter - redDivWidth / 2;
+          const trans_dy = 0;
+          const translateStr = `${trans_dx}px ${trans_dy}px`;
+
+          bizcardDiv.style.translate = translateStr;
+        }
+        var canvasHeight = canvas.style.offsetHeight;
+        var maxCanvasHeight = Math.max(leftColumn.scrollHeight, canvasHeight);
+        canvas.style.height = `${maxCanvasHeight}px`;
+      }
+
       function renderCardDivsAtLeftColumnCenter() {
         const leftColumn = document.getElementById("left-column");
         const leftColumnCenter = getLeftColumnHzCtr();
@@ -496,14 +533,21 @@
           cardDiv.style.translate = translateStr;
         }
 
-        canvas.style.height = `${leftColumn.scrollHeight}px`;
+        var canvasHeight = canvas.style.offsetHeight;
+        var maxCanvasHeight = Math.max(leftColumn.scrollHeight, canvasHeight);
+        canvas.style.height = `${maxCanvasHeight}px`;
+      }
+
+      function renderDivsAtLeftColumnCenter() {
+        renderBizcardDivsAtLeftColumnCenter();
+        renderCardDivsAtLeftColumnCenter();
       }
 
       function handleWindowLoad() {
         createYearDivs();
         createBizCardDivs();
         createCardDivs();
-        renderCardDivsAtLeftColumnCenter();
+        renderDivsAtLeftColumnCenter();
       }
 
       // Function to handle window resize event
@@ -516,7 +560,7 @@
           leftColumnWidth + "px";
         document.getElementById("canvas").style.width = leftColumnWidth + "px";
 
-        renderCardDivsAtLeftColumnCenter();
+        renderDivsAtLeftColumnCenter();
       }
 
       // Attach event listeners
@@ -531,7 +575,9 @@
       leftColumn = document.getElementById("left-column");
       leftColumn.addEventListener("mousemove", handleLeftColumnMouseMove);
       leftColumn.addEventListener("load", handleLeftColumnMouseMove);
-      leftColumn.addEventListener("wheel", handleLeftColumnWheel, { passive: true });
+      leftColumn.addEventListener("wheel", handleLeftColumnWheel, {
+        passive: true,
+      });
     </script>
   </body>
 </html>
