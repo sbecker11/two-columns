@@ -161,8 +161,8 @@
       const MEAN_CARD_WIDTH = 100;
       const CARD_DIV_DIALOG_OFFSET = 20;
 
-      const PARALLAX_HZ_EXAGGERATION_FACTOR = 0; // was 0.25;
-      const PARALLAX_VT_EXAGGERATION_FACTOR = 0.5;
+      const PARALLAX_HZ_EXAGGERATION_FACTOR = 0.05;
+      const PARALLAX_VT_EXAGGERATION_FACTOR = 0.1;
 
       const CARD_FOCUS_BACKGROUND_COLOR = "yellow";
       const CARD_DEFAULT_BACKGROUND_COLOR = "red";
@@ -573,8 +573,8 @@
         const mouseX = wheelEvent.clientX;
         const mouseY = wheelEvent.clientY;
 
-        const parallax_dh = mouseX - centerX;
-        const parallax_dv = mouseY - centerY;
+        const parallax_dh = centerX - mouseX;
+        const parallax_dv = centerY - mouseY;
 
         leftColumn_wheel_dh.textContent = `${parallax_dh}`;
         leftColumn_wheel_dv.textContent = `${parallax_dv}`;
