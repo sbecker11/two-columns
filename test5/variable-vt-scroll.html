@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Two-Column Layout</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #container {
+      display: flex;
+      height: 100%;
+    }
+
+    #right-column, #left-column {
+      flex: 1;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #left-column {
+      background-color: black;
+      width: 200px;
+      color: white;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    #left-column::-webkit-scrollbar {
+      display: none;
+    }
+
+    #canvas {
+      position: relative;
+      max-height: calc(100% - 40px);
+    }
+
+    .red-div {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background-color: red;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-end;
+      color: white;
+      font-family: sans-serif;
+      padding: 10px;
+      white-space: nowrap;
+    }
+
+    #top-gradient, #bottom-gradient {
+      position: absolute;
+      width: 100%;
+      height: 1000px;
+      background: linear-gradient(var(--gradient-start, midnightblue), var(--gradient-end, black));
+    }
+
+    #top-gradient {
+      top: 0;
+    }
+
+    #bottom-gradient {
+      bottom: 0;
+      --gradient-start: black;
+      --gradient-end: midnightblue;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="left-column">
+      <div id="canvas">
+        <div id="top-gradient"></div>
+        <div id="bottom-gradient"></div>
+      </div>
+    </div>
+    <div id="right-column">
+      <div id="message"></div>
+    </div>
+  </div>
+
+  <script>
+    const height = 100;
+    const width = 100;
+    const vt_margin = 20;
+    const left = -width / 2;
+    const canvas = document.getElementById("canvas");
+    const messageElement = document.getElementById("message");
+    const leftColumn = document.getElementById("left-column");
+    const bottomGradient = document.getElementById("bottom-gradient");
+
+    function update_message(message) {
+      messageElement.innerHTML = message;
+    }
+
+    var scrollingInterval = null;
+
+    leftColumn.addEventListener("mousemove", function(event) {
+      var { clientX, clientY } = event;
+      var rect = leftColumn.getBoundingClientRect();
+      var centerX = rect.left + rect.width / 2;
+      var centerY = rect.top + rect.height / 2;
+      var delta_vt = ((clientY - centerY) / centerY) * 100;
+      var scroll_vt = 0;
+
+      if (Math.abs(delta_vt) > 50) {
+        var delta_vt_normalized = Math.abs(delta_vt) - 50;
+        scroll_vt = (delta_vt_normalized / 50) * 10;
+        scroll_vt = delta_vt > 0 ? scroll_vt : -scroll_vt;
+      }
+
+      clearInterval(scrollingInterval);
+
+      if (Math.abs(scroll_vt) > 0.5) {
+        scrollingInterval = setInterval(function() {
+          var currentScrollTop = leftColumn.scrollTop;
+          var newScrollTop = currentScrollTop + scroll_vt;
+
+          if (newScrollTop < 0) {
+            newScrollTop = 0;
+          } else if (newScrollTop > leftColumn.scrollHeight - leftColumn.clientHeight) {
+            newScrollTop = leftColumn.scrollHeight - leftColumn.clientHeight;
+          }
+
+          leftColumn.scrollTop = newScrollTop;
+        }, 10);
+      }
+
+      var canvasHeight = canvas.scrollHeight;
+      update_message(`Mouse position: X=${clientX}, Y=${clientY}<br>Left Column Center: X=${centerX}, Y=${centerY}<br>Delta vt: ${delta_vt.toFixed(2)}%<br>Scroll vt: ${scroll_vt.toFixed(2)}%<br>Canvas Height: ${canvasHeight}px`);
+    });
+
+    function positionGradients() {
+      const canvasHeight = canvas.scrollHeight;
+      const bottomGradientHeight = bottomGradient.offsetHeight;
+      bottomGradient.style.top = `${canvasHeight - bottomGradientHeight}px`;
+    }
+
+    window.addEventListener("load", positionGradients);
+    window.addEventListener("resize", positionGradients);
+
+    for (var i = 0; i < 100; i++) {
+      var the_top = i * (height + vt_margin);
+      var redDiv = document.createElement("div");
+      redDiv.className = "red-div";
+      redDiv.style.top = the_top + "px";
+      redDiv.style.left = left + "px";
+      redDiv.innerHTML = `<div style="text-align: right;">id: ${i}</div><div style="text-align: right;">Top: ${the_top}px</div>`;
+      canvas.appendChild(redDiv);
+    }
+  </script>
+</body>
+</html>

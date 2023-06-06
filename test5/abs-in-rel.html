@@ -42,6 +42,22 @@
         height: fit-content;
       }
 
+      #bottom-gradient {
+        position: absolute;
+        width: 100%;
+        height: 1000px;
+        bottom: 0;
+        background: linear-gradient(to top, midnightblue, black);
+      }
+
+      #top-gradient {
+        position: absolute;
+        width: 100%;
+        height: 1000px;
+        top: 0;
+        background: linear-gradient(to bottom, midnightblue, black);
+      }
+
       #years-div-box {
         position: absolute;
         z-index: 0;
@@ -90,6 +106,8 @@
     <div id="container">
       <div id="left-column">
         <div id="canvas">
+          <div id="top-gradient"></div>
+          <div id="bottom-gradient"></div>
           <div id="years-div-box"></div>
         </div>
       </div>
@@ -103,6 +121,13 @@
     </div>
 
     <script>
+
+      const leftColumn = document.getElementById("left-column");
+      const canvas = document.getElementById("canvas");
+      const bottomGradient = document.getElementById("bottom-gradient");
+      const yearsDivBox = document.getElementById("years-div-box");
+      const bizcardDivs = document.getElementsByClassName("bizcard-div");
+
       const ALL_CARDS_MAX_Z = 11;
       const BIZCARD_MAX_Z = 11;
       const BIZCARD_MIN_Z = 9;
@@ -183,7 +208,6 @@
       }
 
       function createYearDivs() {
-        const yearsDivBox = document.getElementById("years-div-box");
         var yearDivHeightPx = 65;
         var yearBoxHeightPx = 100;
         var yearBoxLeftPx = 114 / 2;
@@ -220,8 +244,6 @@
       }
 
       function createBizCardDivs() {
-        const leftColumn = document.getElementById("left-column");
-        const canvas = document.getElementById("canvas");
         var min_id_inclusive = 0;
         var max_id_exclusive = NUM_BIZ_CARDS;
         var top = 0;
@@ -249,8 +271,6 @@
       // z levels, and z-varied brightness and blur.
       function createCardDivs() {
         var z_histo = new Array(CARD_MAX_Z - CARD_MIN_Z + 1).fill(0);
-        const leftColumn = document.getElementById("left-column");
-        const canvas = document.getElementById("canvas");
         var prevZIndex = null; // Track the previous z-index value
         var min_id_inclusive = NUM_BIZ_CARDS;
         var max_id_exclusive = NUM_BIZ_CARDS + NUM_CARDS;
@@ -344,17 +364,14 @@
 
       // return the horizontal center of the left-column
       function getLeftColumnHzCtr() {
-        var leftColumn = document.getElementById("left-column");
         return leftColumn.offsetWidth / 2;
       }
       // return the vertical center of the left-column
       function getLeftColumnVtCtr() {
-        var leftColumn = document.getElementById("left-column");
         return leftColumn.offsetHeight / 2;
       }
       // return the horizontal center of the canvas
       function getCanvasHzCtr() {
-        var canvas = document.getElementById("canvas");
         return canvas.offsetWidth / 2;
       }
       // return the horizontal center of the given cardDiv
@@ -401,7 +418,6 @@
       // when called from onload, in this case
       // left-column center as mouse location
       function handleLeftColumnMouseMove(event) {
-        var leftColumn = document.getElementById("left-column");
         var leftColumnRect = leftColumn.getBoundingClientRect();
 
         centerDivX = leftColumnRect.width / 2;
@@ -500,10 +516,8 @@
       }
 
       function renderBizcardDivsAtLeftColumnCenter() {
-        const leftColumn = document.getElementById("left-column");
         const leftColumnCenter = getLeftColumnHzCtr();
 
-        const bizcardDivs = document.getElementsByClassName("bizcard-div");
         for (let i = 0; i < bizcardDivs.length; i++) {
           const bizcardDiv = bizcardDivs[i];
           const redDivWidth = bizcardDiv.offsetWidth;
@@ -519,7 +533,6 @@
       }
 
       function renderCardDivsAtLeftColumnCenter() {
-        const leftColumn = document.getElementById("left-column");
         const leftColumnCenter = getLeftColumnHzCtr();
 
         const cardDivs = document.getElementsByClassName("card-div");
@@ -538,6 +551,13 @@
         canvas.style.height = `${maxCanvasHeight}px`;
       }
 
+      function positionGradients() {
+        const canvasHeight = canvas.scrollHeight;
+        const bottomGradientHeight = bottomGradient.offsetHeight;
+        bottomGradient.style.top = `${canvasHeight - bottomGradientHeight}px`;
+      }
+
+
       function renderDivsAtLeftColumnCenter() {
         renderBizcardDivsAtLeftColumnCenter();
         renderCardDivsAtLeftColumnCenter();
@@ -548,6 +568,7 @@
         createBizCardDivs();
         createCardDivs();
         renderDivsAtLeftColumnCenter();
+        positionGradients();
       }
 
       // Function to handle window resize event
@@ -559,7 +580,8 @@
         document.getElementById("left-column").style.width =
           leftColumnWidth + "px";
         document.getElementById("canvas").style.width = leftColumnWidth + "px";
-
+        
+        positionGradients();
         renderDivsAtLeftColumnCenter();
       }
 
@@ -572,7 +594,6 @@
         cardDivs[i].addEventListener("mouseleave", handleCardDivMouseLeave);
         cardDivs[i].addEventListener("click", handleCardDivClick);
       }
-      leftColumn = document.getElementById("left-column");
       leftColumn.addEventListener("mousemove", handleLeftColumnMouseMove);
       leftColumn.addEventListener("load", handleLeftColumnMouseMove);
       leftColumn.addEventListener("wheel", handleLeftColumnWheel, {
