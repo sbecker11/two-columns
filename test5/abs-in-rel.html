@@ -100,6 +100,16 @@
         top: 0;
         border: 5px solid white; /* border width is scalable */
       }
+
+      .card-div-dialog {
+        position: absolute;
+        width: 200px;
+        height: 100px;
+        background: white;
+        padding: 10px;
+        border: 1px solid red;
+        z-index: 100;
+      }
     </style>
   </head>
   <body>
@@ -121,7 +131,6 @@
     </div>
 
     <script>
-
       const leftColumn = document.getElementById("left-column");
       const canvas = document.getElementById("canvas");
       const bottomGradient = document.getElementById("bottom-gradient");
@@ -135,6 +144,9 @@
       const CARD_MIN_Z = 1;
       const ALL_CARDS_MIN_Z = 1;
 
+      const MIN_BRIGHTNESS_PERCENT = 75;
+      const BLUR_Z_SCALE_FACTOR = 4;
+
       const NUM_BIZ_CARDS = 26;
       const MEAN_BIZCARD_HEIGHT = 250;
       const MEAN_BIZCARD_WIDTH = 150;
@@ -144,12 +156,21 @@
       const CARD_MARGIN_VT = 5;
       const MEAN_CARD_HEIGHT = 75;
       const MEAN_CARD_WIDTH = 100;
+      const CARD_DIV_DIALOG_OFFSET = 20;
 
       const PARALLAX_HZ_EXAGGERATION_FACTOR = 0.25;
       const PARALLAX_VT_EXAGGERATION_FACTOR = 0.5;
 
       const CARD_FOCUS_BACKGROUND_COLOR = "yellow";
       const CARD_DEFAULT_BACKGROUND_COLOR = "red";
+
+      const YEAR_DIV_MAX_YEAR = 2023;
+      const YEAR_DIV_MIN_YEAR = 1984;
+      const YEARDIV_HEIGHT_PX = 65;
+      const YEARBOX_HEIGHT_PX = 100;
+      const YEARBOX_LEFT_PX = 114 / 2;
+
+      var allDivs = null;
 
       const leftColumn_mouse_dh = document.getElementById(
         "leftColumn_mouse_dh"
@@ -175,7 +196,13 @@
 
       // returns a filter brightness string between 100% and 75%
       function get_brightness_str_from_z(z) {
-        var bright = linearInterp(z, CARD_MIN_Z, 1.0, CARD_MAX_Z, 0.75);
+        var bright = linearInterp(
+          z,
+          CARD_MIN_Z,
+          1.0,
+          CARD_MAX_Z,
+          MIN_BRIGHTNESS_PERCENT / 100.0
+        );
         bright = Math.round(bright * 100) / 100;
         var perc = `${100 * bright}%`;
         return `brightness(${perc})`;
@@ -183,7 +210,7 @@
 
       // returns a filter blur string
       function get_blur_str_from_z(z) {
-        var blur = (z - CARD_MIN_Z) / 4;
+        var blur = (z - CARD_MIN_Z) / BLUR_Z_SCALE_FACTOR;
         return `blur(${blur}px)`;
       }
 
@@ -207,24 +234,21 @@
         return value;
       }
 
+      // append year-boxes and year-divs to years-div-box
       function createYearDivs() {
-        var yearDivHeightPx = 65;
-        var yearBoxHeightPx = 100;
-        var yearBoxLeftPx = 114 / 2;
-
         var yearBoxTopPx = 0;
-        var yearDivTopPx = yearBoxTopPx + yearBoxHeightPx;
+        var yearDivTopPx = yearBoxTopPx + YEARBOX_HEIGHT_PX;
 
         var yearBox = document.createElement("div");
         yearBox.className = "year-box";
         yearBox.style.top = `${yearBoxTopPx}px`;
-        yearBox.style.left = `${yearBoxLeftPx}px`;
-        yearBox.style.height = `${yearBoxHeightPx}px`;
+        yearBox.style.left = `${YEARBOX_LEFT_PX}px`;
+        yearBox.style.height = `${YEARBOX_HEIGHT_PX}px`;
         yearsDivBox.appendChild(yearBox);
 
-        var jumpPx = yearDivHeightPx + yearBoxHeightPx;
+        var jumpPx = YEARDIV_HEIGHT_PX + YEARBOX_HEIGHT_PX;
 
-        for (let year = 2023; year >= 1984; year--) {
+        for (let year = YEAR_DIV_MAX_YEAR; year >= YEAR_DIV_MIN_YEAR; year--) {
           var yearDiv = document.createElement("div");
           yearDiv.className = "year-div";
           yearDiv.textContent = year;
@@ -234,8 +258,8 @@
           var yearBox = document.createElement("div");
           yearBox.className = "year-box";
           yearBox.style.top = `${yearBoxTopPx}px`;
-          yearBox.style.left = `${yearBoxLeftPx}px`;
-          yearBox.style.height = `${yearBoxHeightPx}px`;
+          yearBox.style.left = `${YEARBOX_LEFT_PX}px`;
+          yearBox.style.height = `${YEARBOX_HEIGHT_PX}px`;
           yearsDivBox.appendChild(yearBox);
 
           yearDivTopPx += jumpPx;
@@ -320,8 +344,8 @@
           prev_z = z;
 
           if (z == CARD_MAX_Z) {
-            cardDiv.style.backgroundColor = "purple";
-            console.log(`cardDiv[${id}] initialized to purple`);
+            cardDiv.style.backgroundColor = "maroon";
+            console.log(`cardDiv[${id}] initialized to maroon`);
           }
         }
         show_z_histo(z_histo);
@@ -374,30 +398,47 @@
       function getCanvasHzCtr() {
         return canvas.offsetWidth / 2;
       }
+      // return the vertical center of the canvas
+      function getCanvasVtCtr() {
+        return canvas.offsetHeight / 2;
+      }
       // return the horizontal center of the given cardDiv
       function getCardDivHzCenter(cardDiv) {
         return cardDiv.offsetWidth / 2;
+      }
+      // return the vertical center of the given cardDiv
+      function getCardDivVtCenter(cardDiv) {
+        return cardDiv.offsetHeight / 2;
+      }
+
+      // return all bizcardDivs and cardDivs lazy-loaded
+      function getAllTranslatableDiv() {
+        if (allDivs == null) {
+          allDivs = [];
+          allDivs = Array.prototype.concat.apply(
+            allDivs,
+            canvas.getElementsByClassName("bizcard-div")
+          );
+          allDivs = Array.prototype.concat.apply(
+            allDivs,
+            canvas.getElementsByClassName("card-div")
+          );
+        }
+        return allDivs;
       }
 
       // applies z-depth scaled parallax to all cardDivs
       function applyMotionParallax(parallax_dh, parallax_dv) {
         // constant for the current view
         var canvasHzCtr = getCanvasHzCtr();
+        var canvasVtCtr = getCanvasVtCtr();
 
         // constants for this parallax
         var dh = parallax_dh * PARALLAX_HZ_EXAGGERATION_FACTOR;
         var dv = parallax_dv * PARALLAX_VT_EXAGGERATION_FACTOR;
 
-        // compute translations for all bizcardDivs and all cardDivs
-        var allDivs = [];
-        allDivs = Array.prototype.concat.apply(
-          allDivs,
-          canvas.getElementsByClassName("bizcard-div")
-        );
-        allDivs = Array.prototype.concat.apply(
-          allDivs,
-          canvas.getElementsByClassName("card-div")
-        );
+        // compute translations for all translatableDivs
+        var allDivs = getAllTranslatableDiv();
         for (var i = 0; i < allDivs.length; i++) {
           var cardDiv = allDivs[i];
           var zIndexStr = cardDiv.style.zIndex;
@@ -405,7 +446,7 @@
 
           // canvas-relative cardDiv center
           var canvas_dx = canvasHzCtr - getCardDivHzCenter(cardDiv);
-          var canvas_dy = 0;
+          var canvas_dy = canvasVtCtr - getCardDivVtCenter(cardDiv);
 
           var zTranslateStr = getZTranslateStr(dh, dv, z, canvas_dx, canvas_dy);
 
@@ -413,25 +454,56 @@
         }
       }
 
+      var scrollingInterval = null;
+
       // Function to handle transform cardDivs according
       // to current left-column position. Given null
       // when called from onload, in this case
       // left-column center as mouse location
       function handleLeftColumnMouseMove(event) {
-        var leftColumnRect = leftColumn.getBoundingClientRect();
+        var rect = leftColumn.getBoundingClientRect();
+        var centerX = rect.left + rect.width / 2;
+        var centerY = rect.top + rect.height / 2;
 
-        centerDivX = leftColumnRect.width / 2;
-        centerDivY = leftColumnRect.height / 2;
-
-        var mouseX = centerDivX;
-        var mouseY = centerDivY;
+        var mouseX = centerX;
+        var mouseY = centerY;
         if (event) {
           mouseX = event.clientX;
           mouseY = event.clientY;
         }
 
-        var parallax_dh = -(mouseX - centerDivX);
-        var parallax_dv = -(mouseY - centerDivY);
+        var delta_vt = ((mouseY - centerY) / centerY) * 100;
+        var scroll_vt = 0;
+
+        if (Math.abs(delta_vt) > 50) {
+          var delta_vt_normalized = Math.abs(delta_vt) - 50;
+          scroll_vt = (delta_vt_normalized / 50) * 10;
+          scroll_vt = delta_vt > 0 ? scroll_vt : -scroll_vt;
+        }
+
+        clearInterval(scrollingInterval);
+
+        if (Math.abs(scroll_vt) > 0.5) {
+          scrollingInterval = setInterval(function () {
+            var currentScrollTop = leftColumn.scrollTop;
+            var newScrollTop = currentScrollTop + scroll_vt;
+
+            if (newScrollTop < 0) {
+              newScrollTop = 0;
+            } else {
+              var maxScrollTop =
+                leftColumn.scrollHeight - leftColumn.clientHeight;
+              if (newScrollTop > maxScrollTop) {
+                newScrollTop = maxScrollTop;
+              }
+            }
+
+            leftColumn.scrollTop = newScrollTop;
+          }, 10);
+        }
+
+        var parallax_dh = centerX - mouseX;
+        var parallax_dv = centerY - mouseY;
 
         leftColumn_mouse_dh.textContent = `${parallax_dh}`;
         leftColumn_mouse_dv.textContent = `${parallax_dv}`;
@@ -450,8 +522,8 @@
         const mouseX = wheelEvent.clientX;
         const mouseY = wheelEvent.clientY;
 
-        const parallax_dh = -(mouseX - centerX);
-        const parallax_dv = -(mouseY - centerY);
+        const parallax_dh = centerX - mouseX;
+        const parallax_dv = centerY - mouseY ;
 
         leftColumn_wheel_dh.textContent = `${parallax_dh}`;
         leftColumn_wheel_dv.textContent = `${parallax_dv}`;
@@ -461,7 +533,7 @@
 
       // handle onMouseEnter event for any cardDiv
       // when called from onload, in this case
-      // mouse location is set to be left-column center 
+      // mouse location is set to be left-column center
       function handleCardDivMouseEnter(event) {
         var targetCardDiv = event.target.closest(".card-div");
         if (targetCardDiv) {
@@ -494,24 +566,21 @@
       function handleCardDivClick(event) {
         var targetCardDiv = event.target.closest(".card-div");
         if (targetCardDiv) {
-          var dialog = document.createElement("div");
-          dialog.className = "dialog";
-          dialog.style.position = "absolute";
-          dialog.style.top = `${targetCardDiv.offsetTop + 20}px`;
-          dialog.style.left = `${targetCardDiv.offsetLeft + 20}px`;
-          dialog.style.background = "white";
-          dialog.style.padding = "10px";
-          dialog.style.border = "1px solid black";
-
+          var card_div_dialog = document.createElement("div");
+          card_div_dialog.className = "card-div-dialog";
+          card_div_dialog.style.top = `${
+            targetCardDiv.offsetTop + CARD_DIV_DIALOG_OFFSET
+          }px`;
+          card_div_dialog.style.left = `${
+            targetCardDiv.offsetLeft + CARD_DIV_DIALOG_OFFSET
+          }px`;
           var closeButton = document.createElement("button");
           closeButton.innerText = "Close";
           closeButton.addEventListener("click", function () {
-            dialog.remove();
+            card_div_dialog.remove();
           });
-
-          dialog.appendChild(closeButton);
-
-          document.body.appendChild(dialog);
+          card_div_dialog.appendChild(closeButton);
+          document.body.appendChild(card_div_dialog);
         }
       }
 
@@ -557,7 +626,6 @@
         bottomGradient.style.top = `${canvasHeight - bottomGradientHeight}px`;
       }
 
-
       function renderDivsAtLeftColumnCenter() {
         renderBizcardDivsAtLeftColumnCenter();
         renderCardDivsAtLeftColumnCenter();
@@ -580,7 +648,7 @@
         document.getElementById("left-column").style.width =
           leftColumnWidth + "px";
         document.getElementById("canvas").style.width = leftColumnWidth + "px";
-        
+
         positionGradients();
         renderDivsAtLeftColumnCenter();
       }
