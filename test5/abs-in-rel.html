@@ -129,7 +129,8 @@
 
         <p>leftColumn_wheel_dh: <span id="leftColumn_wheel_dh"></span></p>
         <p>leftColumn_wheel_dv: <span id="leftColumn_wheel_dv"></span></p>
-        <p id="z_histo_element"></p>
+        <p id="carddiv_z_histo_element"></p>
+        <p id="bizcarddiv_z_histo_element"></p>
       </div>
     </div>
 
@@ -140,9 +141,9 @@
       const yearsDivBox = document.getElementById("years-div-box");
       const bizcardDivs = document.getElementsByClassName("bizcard-div");
 
-      const ALL_CARDS_MAX_Z = 11;
-      const BIZCARD_MAX_Z = 11;
-      const BIZCARD_MIN_Z = 9;
+      const ALL_CARDS_MAX_Z = 15;
+      const BIZCARD_MAX_Z = 14;
+      const BIZCARD_MIN_Z = 12;
       const CARD_MAX_Z = 8;
       const CARD_MIN_Z = 1;
       const ALL_CARDS_MIN_Z = 1;
@@ -193,7 +194,8 @@
       const leftColumn_wheel_dv = document.getElementById(
         "leftColumn_wheel_dv"
       );
-      const z_histo_element = document.getElementById("z_histo_element");
+      const carddiv_z_histo_element = document.getElementById("carddiv_z_histo_element");
+      const bizcarddiv_z_histo_element = document.getElementById("bizcarddiv_z_histo_element");
 
       function get_zindexStr_from_z(z) {
         return `${ALL_CARDS_MAX_Z - z}`;
@@ -280,6 +282,8 @@
       }
 
       function createBizCardDivs() {
+        var bizcarddiv_z_histo = new Array(BIZCARD_MAX_Z - BIZCARD_MIN_Z + 1).fill(0);
+
         var min_id_inclusive = 0;
         var max_id_exclusive = NUM_BIZ_CARDS;
         var top = 0;
@@ -293,6 +297,8 @@
           var width = MEAN_BIZCARD_WIDTH;
           bizcardDiv.style.width = `${width}px`;
           var z = getRandomInt(BIZCARD_MIN_Z, BIZCARD_MAX_Z);
+          bizcarddiv_z_histo[z - BIZCARD_MIN_Z]++;
+
           var zindexStr = get_zindexStr_from_z(z);
           bizcardDiv.style.zIndex = zindexStr;
           var zscale = getZscale(z).toFixed(2);
@@ -300,13 +306,14 @@
           canvas.appendChild(bizcardDiv);
           top += MEAN_BIZCARD_HEIGHT;
         }
+        show_bizcarddiv_z_histo(bizcarddiv_z_histo)
       }
 
       // adds a vertical stack of cardDivs to #canvas
       // each with random x,y offsets and random
       // z levels, and z-varied brightness and blur.
       function createCardDivs() {
-        var z_histo = new Array(CARD_MAX_Z - CARD_MIN_Z + 1).fill(0);
+        var carddiv_z_histo = new Array(CARD_MAX_Z - CARD_MIN_Z + 1).fill(0);
         var prevZIndex = null; // Track the previous z-index value
         var min_id_inclusive = NUM_BIZ_CARDS;
         var max_id_exclusive = NUM_BIZ_CARDS + NUM_CARDS;
@@ -338,7 +345,7 @@
             z = getRandomInt(CARD_MIN_Z, CARD_MAX_Z);
           }
 
-          z_histo[z - CARD_MIN_Z]++;
+          carddiv_z_histo[z - CARD_MIN_Z]++;
 
           cardDiv.addEventListener("mouseenter", handleCardDivMouseEnter);
           cardDiv.addEventListener("mouseleave", handleCardDivMouseLeave);
@@ -360,14 +367,20 @@
             console.log(`cardDiv[${id}] initialized to maroon`);
           }
         }
-        show_z_histo(z_histo);
+        show_carddiv_z_histo(carddiv_z_histo);
       }
 
-      function show_z_histo(z_histo) {
+      function show_carddiv_z_histo(carddiv_z_histo) {
         var lines = "";
-        for (var z = 0; z < z_histo.length; z++)
-          lines += `z[${z + CARD_MIN_Z}] => ${z_histo[z]}<br/>`;
-        z_histo_element.innerHTML = lines;
+        for (var z = 0; z < carddiv_z_histo.length; z++)
+          lines += `z[${z + CARD_MIN_Z}] => ${carddiv_z_histo[z]}<br/>`;
+        carddiv_z_histo_element.innerHTML = lines;
+      }
+      function show_bizcarddiv_z_histo(bizcarddiv_z_histo) {
+        var lines = "";
+        for (var z = 0; z < bizcarddiv_z_histo.length; z++)
+          lines += `z[${z + BIZCARD_MIN_Z}] => ${bizcarddiv_z_histo[z]}<br/>`;
+        bizcarddiv_z_histo_element.innerHTML = lines;
       }
 
       /**
@@ -450,7 +463,7 @@
         var canvasHzCtr = getCanvasHzCtr();
         var canvasVtCtr = getCanvasVtCtr();
 
-        leftColumn_parallax_dv.textContent = `${parallax_dv}`;
+        leftColumn_parallax_dv.textContent = `${toFixedPoint(parallax_dv,2)}`;
 
         // constants for this parallax
         var dh = parallax_dh * PARALLAX_HZ_EXAGGERATION_FACTOR;
@@ -500,7 +513,7 @@
           parallax_dh = centerX - mouseX;
           parallax_dv = centerY - mouseY;
 
-          leftColumn_mouse_scroll_vt.textContent = `${scroll_vt}`;
+          leftColumn_mouse_scroll_vt.textContent = `${toFixedPoint(scroll_vt,2)}`;
 
         } 
         else {
@@ -551,13 +564,13 @@
           parallax_dh = centerX - mouseX;
           parallax_dv = -(dist_v + scroll_vt);
 
-          leftColumn_mouse_scroll_vt.textContent = `scroll_vt:${scroll_vt} dist_v:${dist_v}`;
+          leftColumn_mouse_scroll_vt.textContent = `scroll_vt:${toFixedPoint(scroll_vt,2)} dist_v:${dist_v}`;
 
         }
 
 
-        leftColumn_mouse_dh.textContent = `${parallax_dh}`;
-        leftColumn_mouse_dv.textContent = `${parallax_dv}`;
+        leftColumn_mouse_dh.textContent = `${toFixedPoint(parallax_dh,2)}`;
+        leftColumn_mouse_dv.textContent = `${toFixedPoint(parallax_dv,2)}`;
 
         applyMotionParallax(parallax_dh, parallax_dv);
       }
